@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestão de Infraestrutura</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background-color: #f4f4f4;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    form, .section {
+      background-color: #fff;
+      padding: 20px;
+      margin-bottom: 30px;
+      border: 1px solid #ccc;
+    }
+    input, select, textarea {
+      margin: 10px 0;
+      padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      margin-bottom: 40px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #007BFF;
+      color: white;
+    }
+    .done {
+      background-color: #d4edda;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Gestão de Infraestrutura</h1>
+
+<!-- Menu Principal -->
+<div id="secao-menu" class="section">
+  <h2>Menu Principal</h2>
+  <button onclick="mostrarSecao('clientes')">📇 Clientes</button>
+  <button onclick="mostrarSecao('responsaveis')">👤 Responsáveis</button>
+  <button onclick="mostrarSecao('tipos')">🗂️ Tipos de Tarefa</button>
+  <button onclick="mostrarSecao('tarefas')">📋 Tarefas</button>
+</div>
+<!-- Seção: Clientes -->
+<div id="secao-clientes" class="section hidden">
+  <h2>Cadastro de Clientes</h2>
+  <button onclick="mostrarSecao('menu')">🏠 Home</button>
+
+  <form id="clienteForm">
+    <label>Razão Social:</label>
+    <input type="text" id="razaoSocial" required>
+
+    <label>CNPJ:</label>
+    <input type="text" id="cnpj" required maxlength="18" placeholder="00.000.000/0000-00">
+
+    <label>Telefone:</label>
+    <input type="text" id="telefone" required>
+
+    <label>E-mail:</label>
+    <input type="email" id="email" required>
+
+    <button type="submit">➕ Incluir Cliente</button>
+  </form>
+
+  <table id="tabelaClientes">
+    <thead>
+      <tr>
+        <th>Razão Social</th>
+        <th>CNPJ</th>
+        <th>Telefone</th>
+        <th>E-mail</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<script>
+  const tabelaClientes = document.getElementById('tabelaClientes').getElementsByTagName('tbody')[0];
+  const clienteSelect = document.getElementById('clienteSelect');
+  const filtroCliente = document.getElementById('filtroCliente');
+
+  // Máscara de CNPJ
+  document.getElementById('cnpj').addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '');
+    if (v.length > 14) v = v.slice(0, 14);
+    v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+    v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+    v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+    v = v.replace(/(\d{4})(\d)/, '$1-$2');
+    this.value = v;
+  });
+
+  clienteForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const editando = clienteForm.getAttribute('data-editando');
+    const razao = razaoSocial.value;
+    const cnpjVal = cnpj.value;
+    const telefoneVal = telefone.value;
+    const emailVal = email.value;
+
+    if (!/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(cnpjVal)) {
+      alert("CNPJ inválido. Use o formato 00.000.000/0000-00");
+      return;
+    }
+
+    if (editando) {
+      const linha = tabelaClientes.rows[editando];
+      linha.cells[0].innerText = razao;
+      linha.cells[1].innerText = cnpjVal;
+      linha.cells[2].innerText = telefoneVal;
+      linha.cells[3].innerText = emailVal;
+    } else {
+      const linha = tabelaClientes.insertRow();
+      linha.insertCell(0).innerText = razao;
+      linha.insertCell(1).innerText = cnpjVal;
+      linha.insertCell(2).innerText = telefoneVal;
+      linha.insertCell(3).innerText = emailVal;
+
+      const acaoCell = linha.insertCell(4);
+      const editarBtn = document.createElement('button');
+      editarBtn.innerText = "✏️ Editar";
+      editarBtn.onclick = () => {
+        razaoSocial.value = linha.cells[0].innerText;
+        cnpj.value = linha.cells[1].innerText;
+        telefone.value = linha.cells[2].innerText;
+        email.value = linha.cells[3].innerText;
+        clienteForm.setAttribute('data-editando', linha.rowIndex);
+        clienteForm.querySelector('button').innerText = "💾 Salvar Alterações";
+      };
+
+      const excluirBtn = document.createElement('button');
+      excluirBtn.innerText = "🗑️ Excluir";
+      excluirBtn.onclick = () => {
+        if (confirm("Deseja excluir este cliente?")) {
+          linha.remove();
+          atualizarSelects();
+          salvarDados();
+        }
+      };
+
+      acaoCell.appendChild(editarBtn);
+      acaoCell.appendChild(excluirBtn);
+    }
+
+    clienteForm.reset();
+    clienteForm.removeAttribute('data-editando');
+    clienteForm.querySelector('button').innerText = "➕ Incluir Cliente";
+    atualizarSelects();
+    salvarDados();
+  });
+</script>
+<!-- Seção: Responsáveis -->
+<div id="secao-responsaveis" class="section hidden">
+  <h2>Cadastro de Responsáveis</h2>
+  <button onclick="mostrarSecao('menu')">🏠 Home</button>
+
+  <form id="responsavelForm">
+    <label>Nome:</label>
+    <input type="text" id="nomeResponsavel" required>
+
+    <label>Função:</label>
+    <input type="text" id="funcaoResponsavel" required>
+
+    <label>Telefone:</label>
+    <input type="text" id="telefoneResponsavel" required>
+
+    <label>E-mail:</label>
+    <input type="email" id="emailResponsavel" required>
+
+    <button type="submit">➕ Incluir Responsável</button>
+  </form>
+
+  <table id="tabelaResponsaveis">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Função</th>
+        <th>Telefone</th>
+        <th>E-mail</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<script>
+  const tabelaResponsaveis = document.getElementById('tabelaResponsaveis').getElementsByTagName('tbody')[0];
+  const responsavelSelect = document.getElementById('responsavelSelect');
+
+  responsavelForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const editando = responsavelForm.getAttribute('data-editando');
+    const nome = nomeResponsavel.value;
+    const funcao = funcaoResponsavel.value;
+    const telefone = telefoneResponsavel.value;
+    const email = emailResponsavel.value;
+
+    if (editando) {
+      const linha = tabelaResponsaveis.rows[editando];
+      linha.cells[0].innerText = nome;
+      linha.cells[1].innerText = funcao;
+      linha.cells[2].innerText = telefone;
+      linha.cells[3].innerText = email;
+    } else {
+      const linha = tabelaResponsaveis.insertRow();
+      linha.insertCell(0).innerText = nome;
+      linha.insertCell(1).innerText = funcao;
+      linha.insertCell(2).innerText = telefone;
+      linha.insertCell(3).innerText = email;
+
+      const acaoCell = linha.insertCell(4);
+      const editarBtn = document.createElement('button');
+      editarBtn.innerText = "✏️ Editar";
+      editarBtn.onclick = () => {
+        nomeResponsavel.value = linha.cells[0].innerText;
+        funcaoResponsavel.value = linha.cells[1].innerText;
+        telefoneResponsavel.value = linha.cells[2].innerText;
+        emailResponsavel.value = linha.cells[3].innerText;
+        responsavelForm.setAttribute('data-editando', linha.rowIndex);
+        responsavelForm.querySelector('button').innerText = "💾 Salvar Alterações";
+      };
+
+      const excluirBtn = document.createElement('button');
+      excluirBtn.innerText = "🗑️ Excluir";
+      excluirBtn.onclick = () => {
+        if (confirm("Deseja excluir este responsável?")) {
+          linha.remove();
+          atualizarSelects();
+          salvarDados();
+        }
+      };
+
+      acaoCell.appendChild(editarBtn);
+      acaoCell.appendChild(excluirBtn);
+    }
+
+    responsavelForm.reset();
+    responsavelForm.removeAttribute('data-editando');
+    responsavelForm.querySelector('button').innerText = "➕ Incluir Responsável";
+    atualizarSelects();
+    salvarDados();
+  });
+</script>
+<!-- Seção: Tipos de Tarefa -->
+<div id="secao-tipos" class="section hidden">
+  <h2>Cadastro de Tipos de Tarefa</h2>
+  <button onclick="mostrarSecao('menu')">🏠 Home</button>
+
+  <form id="tipoForm">
+    <label>Nome do Tipo de Tarefa:</label>
+    <input type="text" id="nomeTipo" required>
+
+    <label>Checklist (um item por linha):</label>
+    <textarea id="checklistTipo" rows="5" placeholder="Ex: Verificar tomadas\nTestar disjuntores"></textarea>
+
+    <button type="submit">➕ Incluir Tipo</button>
+  </form>
+
+  <table id="tabelaTipos">
+    <thead>
+      <tr>
+        <th>Tipo</th>
+        <th>Checklist</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<script>
+  const tabelaTipos = document.getElementById('tabelaTipos').getElementsByTagName('tbody')[0];
+  const tipoSelect = document.getElementById('tipoSelect');
+  const tiposDeTarefa = {};
+
+  tipoForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const editando = tipoForm.getAttribute('data-editando');
+    const nomeTipo = nomeTipo.value;
+    const checklistTexto = checklistTipo.value;
+    const checklistArray = checklistTexto.split('\n').map(item => item.trim()).filter(item => item);
+
+    if (editando) {
+      const linha = tabelaTipos.rows[editando];
+      linha.cells[0].innerText = nomeTipo;
+      linha.cells[1].innerText = checklistArray.join(', ');
+    } else {
+      const linha = tabelaTipos.insertRow();
+      linha.insertCell(0).innerText = nomeTipo;
+      linha.insertCell(1).innerText = checklistArray.join(', ');
+
+      const acaoCell = linha.insertCell(2);
+      const editarBtn = document.createElement('button');
+      editarBtn.innerText = "✏️ Editar";
+      editarBtn.onclick = () => {
+        nomeTipo.value = linha.cells[0].innerText;
+        checklistTipo.value = checklistArray.join('\n');
+        tipoForm.setAttribute('data-editando', linha.rowIndex);
+        tipoForm.querySelector('button').innerText = "💾 Salvar Alterações";
+      };
+
+      const excluirBtn = document.createElement('button');
+      excluirBtn.innerText = "🗑️ Excluir";
+      excluirBtn.onclick = () => {
+        if (confirm("Deseja excluir este tipo de tarefa?")) {
+          linha.remove();
+          delete tiposDeTarefa[nomeTipo];
+          atualizarSelects();
+          salvarDados();
+        }
+      };
+
+      acaoCell.appendChild(editarBtn);
+      acaoCell.appendChild(excluirBtn);
+    }
+
+    tiposDeTarefa[nomeTipo] = checklistArray;
+    tipoForm.reset();
+    tipoForm.removeAttribute('data-editando');
+    tipoForm.querySelector('button').innerText = "➕ Incluir Tipo";
+    atualizarSelects();
+    salvarDados();
+  });
+</script>
+<!-- Seção: Tarefas -->
+<div id="secao-tarefas" class="section hidden">
+  <h2>Agenda de Tarefas</h2>
+  <button onclick="mostrarSecao('menu')">🏠 Home</button>
+
+  <form id="tarefaForm">
+    <label>Tarefa:</label>
+    <input type="text" id="tarefa" required>
+
+    <label>Responsável:</label>
+    <select id="responsavelSelect" required>
+      <option value="">Selecione um responsável</option>
+    </select>
+
+    <label>Cliente:</label>
+    <select id="clienteSelect" required>
+      <option value="">Selecione um cliente</option>
+    </select>
+
+    <label>Tipo de Tarefa:</label>
+    <select id="tipoSelect" required onchange="mostrarChecklistTipo()">
+      <option value="">Selecione o tipo</option>
+    </select>
+
+    <div id="checklistPreview" class="section hidden">
+      <h3>Checklist do Tipo Selecionado</h3>
+      <ul id="checklistItens"></ul>
+    </div>
+
+    <button type="submit">➕ Incluir Tarefa</button>
+  </form>
+
+  <label for="filtroCliente"><strong>Filtrar tarefas por cliente:</strong></label>
+  <select id="filtroCliente">
+    <option value="">Todos os clientes</option>
+  </select>
+
+  <button onclick="exportarPDF()">📄 Exportar Tarefas para PDF</button>
+  <button onclick="limparDados()">🧹 Limpar Todos os Dados</button>
+
+  <div id="tarefaContainer">
+    <table id="taskTable">
+      <thead>
+        <tr>
+          <th>Tarefa</th>
+          <th>Responsável</th>
+          <th>Cliente</th>
+          <th>Tipo</th>
+          <th>Status</th>
+          <th>Checklist</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+<script>
+  const taskTable = document.getElementById('taskTable').getElementsByTagName('tbody')[0];
+  const checklistItens = document.getElementById('checklistItens');
+  const checklistPreview = document.getElementById('checklistPreview');
+
+  tarefaForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const editando = tarefaForm.getAttribute('data-editando');
+    const tarefa = document.getElementById('tarefa').value;
+    const responsavel = responsavelSelect.value;
+    const cliente = clienteSelect.value;
+    const tipo = tipoSelect.value;
+    const checklist = tiposDeTarefa[tipo] || [];
+
+    if (editando) {
+      const linha = taskTable.rows[editando];
+      linha.cells[0].innerText = tarefa;
+      linha.cells[1].innerText = responsavel;
+      linha.cells[2].innerText = cliente;
+      linha.cells[3].innerText = tipo;
+      linha.cells[5].innerHTML = checklist.map(item => `<input type="checkbox"> ${item}<br>`).join('');
+    } else {
+      const linha = taskTable.insertRow();
+      linha.setAttribute('data-cliente', cliente);
+      linha.insertCell(0).innerText = tarefa;
+      linha.insertCell(1).innerText = responsavel;
+      linha.insertCell(2).innerText = cliente;
+      linha.insertCell(3).innerText = tipo;
+      linha.insertCell(4).innerText = "🔴 Pendente";
+
+      const checklistCell = linha.insertCell(5);
+      checklistCell.innerHTML = checklist.map(item => `<input type="checkbox"> ${item}<br>`).join('');
+
+      const acaoCell = linha.insertCell(6);
+      const concluirBtn = document.createElement('button');
+      concluirBtn.innerText = "✅ Concluir";
+      concluirBtn.onclick = () => {
+        linha.classList.add("done");
+        linha.cells[4].innerText = "🟢 Concluída";
+        concluirBtn.disabled = true;
+      };
+
+      const editarBtn = document.createElement('button');
+      editarBtn.innerText = "✏️ Editar";
+      editarBtn.onclick = () => {
+        document.getElementById('tarefa').value = linha.cells[0].innerText;
+        responsavelSelect.value = linha.cells[1].innerText;
+        clienteSelect.value = linha.cells[2].innerText;
+        tipoSelect.value = linha.cells[3].innerText;
+        mostrarChecklistTipo();
+        tarefaForm.setAttribute('data-editando', linha.rowIndex);
+        tarefaForm.querySelector('button').innerText = "💾 Salvar Alterações";
+      };
+
+      const excluirBtn = document.createElement('button');
+      excluirBtn.innerText = "🗑️ Excluir";
+      excluirBtn.onclick = () => {
+        if (confirm("Deseja excluir esta tarefa?")) {
+          linha.remove();
+          salvarDados();
+        }
+      };
+
+      acaoCell.appendChild(concluirBtn);
+      acaoCell.appendChild(editarBtn);
+      acaoCell.appendChild(excluirBtn);
+    }
+
+    tarefaForm.reset();
+    tarefaForm.removeAttribute('data-editando');
+    tarefaForm.querySelector('button').innerText = "➕ Incluir Tarefa";
+    checklistPreview.classList.add('hidden');
+    salvarDados();
+  });
+
+  function mostrarChecklistTipo() {
+    const tipoSelecionado = tipoSelect.value;
+    checklistItens.innerHTML = '';
+    if (tiposDeTarefa[tipoSelecionado]) {
+      tiposDeTarefa[tipoSelecionado].forEach(item => {
+        const li = document.createElement('li');
+        li.innerText = item;
+        checklistItens.appendChild(li);
+      });
+      checklistPreview.classList.remove('hidden');
+    } else {
+      checklistPreview.classList.add('hidden');
+    }
+  }
+</script>
+<script>
+  // Navegação entre seções
+  function mostrarSecao(secao) {
+    document.querySelectorAll('.section').forEach(div => div.classList.add('hidden'));
+    document.getElementById(`secao-${secao}`).classList.remove('hidden');
+  }
+
+  // Exportar tarefas para PDF
+  function exportarPDF() {
+    const elemento = document.getElementById('tarefaContainer');
+    const opt = {
+      margin: 0.5,
+      filename: 'tarefas_infraestrutura.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(elemento).save();
+  }
+
+  // Filtro por cliente
+  filtroCliente.addEventListener('change', function () {
+    const clienteSelecionado = filtroCliente.value;
+    const linhas = taskTable.getElementsByTagName('tr');
+    for (let i = 0; i < linhas.length; i++) {
+      const linha = linhas[i];
+      const cliente = linha.getAttribute('data-cliente');
+      linha.style.display = (!clienteSelecionado || cliente === clienteSelecionado) ? '' : 'none';
+    }
+  });
+
+  // Atualizar selects com base nas tabelas
+  function atualizarSelects() {
+    // Clientes
+    clienteSelect.innerHTML = '<option value="">Selecione um cliente</option>';
+    filtroCliente.innerHTML = '<option value="">Todos os clientes</option>';
+    Array.from(tabelaClientes.rows).forEach(row => {
+      const nome = row.cells[0].innerText;
+      clienteSelect.add(new Option(nome, nome));
+      filtroCliente.add(new Option(nome, nome));
+    });
+
+    // Responsáveis
+    responsavelSelect.innerHTML = '<option value="">Selecione um responsável</option>';
+    Array.from(tabelaResponsaveis.rows).forEach(row => {
+      const nome = row.cells[0].innerText;
+      const funcao = row.cells[1].innerText;
+      responsavelSelect.add(new Option(`${nome} (${funcao})`, nome));
+    });
+
+    // Tipos
+    tipoSelect.innerHTML = '<option value="">Selecione o tipo</option>';
+    Array.from(tabelaTipos.rows).forEach(row => {
+      const tipo = row.cells[0].innerText;
+      tipoSelect.add(new Option(tipo, tipo));
+    });
+  }
+
+  // Salvar dados no localStorage
+  function salvarDados() {
+    localStorage.setItem('clientes', tabelaClientes.innerHTML);
+    localStorage.setItem('responsaveis', tabelaResponsaveis.innerHTML);
+    localStorage.setItem('tiposDeTarefa', JSON.stringify(tiposDeTarefa));
+    localStorage.setItem('tarefas', taskTable.innerHTML);
+  }
+
+  // Carregar dados do localStorage
+  function carregarDados() {
+    if (localStorage.getItem('clientes')) tabelaClientes.innerHTML = localStorage.getItem('clientes');
+    if (localStorage.getItem('responsaveis')) tabelaResponsaveis.innerHTML = localStorage.getItem('responsaveis');
+    if (localStorage.getItem('tarefas')) taskTable.innerHTML = localStorage.getItem('tarefas');
+
+    const tiposSalvos = JSON.parse(localStorage.getItem('tiposDeTarefa') || '{}');
+    Object.assign(tiposDeTarefa, tiposSalvos);
+
+    atualizarSelects();
+  }
+
+  // Limpar todos os dados salvos
+  function limparDados() {
+    if (confirm("Tem certeza que deseja apagar todos os dados salvos?")) {
+      localStorage.clear();
+      location.reload();
+    }
+  }
+
+  // Salvar automaticamente após cada cadastro
+  ['clienteForm', 'responsavelForm', 'tipoForm', 'tarefaForm'].forEach(id => {
+    document.getElementById(id).addEventListener('submit', () => {
+      setTimeout(() => {
+        salvarDados();
+        atualizarSelects();
+      }, 100);
+    });
+  });
+
+  // Carregar dados ao iniciar
+  window.addEventListener('load', carregarDados);
+</script>
+</body>
+</html>
