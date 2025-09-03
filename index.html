@@ -86,19 +86,16 @@
   </div>
 
 <script>
-let clientes = [], tecnicos = [], tiposDeTarefa = {}; // tiposDeTarefa: {tipo: [item1, item2, ...]}
+////// CLIENTES //////
 
-function salvarDados() {
+let clientes = [];
+
+function salvarClientes() {
   localStorage.setItem('clientes', JSON.stringify(clientes));
-  localStorage.setItem('tecnicos', JSON.stringify(tecnicos));
-  localStorage.setItem('tiposDeTarefa', JSON.stringify(tiposDeTarefa));
 }
-function carregarDados() {
+function carregarClientes() {
   clientes = JSON.parse(localStorage.getItem('clientes')||'[]');
-  tecnicos = JSON.parse(localStorage.getItem('tecnicos')||'[]');
-  tiposDeTarefa = JSON.parse(localStorage.getItem('tiposDeTarefa')||'{}');
 }
-
 function renderClientes() {
   let tbody = document.getElementById('tabelaClientes').getElementsByTagName('tbody')[0];
   tbody.innerHTML = '';
@@ -114,7 +111,7 @@ function renderClientes() {
     editar.onclick = () => editarCliente(i);
     let excluir = document.createElement('button');
     excluir.innerText = "🗑️";
-    excluir.onclick = () => { clientes.splice(i,1); salvarDados(); renderClientes(); };
+    excluir.onclick = () => { clientes.splice(i,1); salvarClientes(); renderClientes(); };
     acoes.appendChild(editar); acoes.appendChild(excluir);
   });
 }
@@ -143,9 +140,19 @@ document.getElementById('clienteForm').onsubmit = function(e) {
   } else {
     clientes.push(obj);
   }
-  salvarDados(); renderClientes(); this.reset();
+  salvarClientes(); renderClientes(); this.reset();
 };
 
+////// TÉCNICOS //////
+
+let tecnicos = [];
+
+function salvarTecnicos() {
+  localStorage.setItem('tecnicos', JSON.stringify(tecnicos));
+}
+function carregarTecnicos() {
+  tecnicos = JSON.parse(localStorage.getItem('tecnicos')||'[]');
+}
 function renderTecnicos() {
   let tbody = document.getElementById('tabelaTecnicos').getElementsByTagName('tbody')[0];
   tbody.innerHTML = '';
@@ -161,7 +168,7 @@ function renderTecnicos() {
     editar.onclick = () => editarTecnico(i);
     let excluir = document.createElement('button');
     excluir.innerText = "🗑️";
-    excluir.onclick = () => { tecnicos.splice(i,1); salvarDados(); renderTecnicos(); };
+    excluir.onclick = () => { tecnicos.splice(i,1); salvarTecnicos(); renderTecnicos(); };
     acoes.appendChild(editar); acoes.appendChild(excluir);
   });
 }
@@ -190,9 +197,19 @@ document.getElementById('tecnicoForm').onsubmit = function(e) {
   } else {
     tecnicos.push(obj);
   }
-  salvarDados(); renderTecnicos(); this.reset();
+  salvarTecnicos(); renderTecnicos(); this.reset();
 };
 
+////// TIPOS DE TAREFA //////
+
+let tiposDeTarefa = {}; // {tipo: [check1, check2, ...]}
+
+function salvarTipos() {
+  localStorage.setItem('tiposDeTarefa', JSON.stringify(tiposDeTarefa));
+}
+function carregarTipos() {
+  tiposDeTarefa = JSON.parse(localStorage.getItem('tiposDeTarefa')||'{}');
+}
 function renderTipos() {
   let tbody = document.getElementById('tabelaTipos').getElementsByTagName('tbody')[0];
   tbody.innerHTML = '';
@@ -206,7 +223,7 @@ function renderTipos() {
     editar.onclick = () => editarTipo(tipo);
     let excluir = document.createElement('button');
     excluir.innerText = "🗑️";
-    excluir.onclick = () => { delete tiposDeTarefa[tipo]; salvarDados(); renderTipos(); };
+    excluir.onclick = () => { delete tiposDeTarefa[tipo]; salvarTipos(); renderTipos(); };
     acoes.appendChild(editar); acoes.appendChild(excluir);
   });
 }
@@ -222,24 +239,23 @@ document.getElementById('tipoForm').onsubmit = function(e) {
   let tipo = document.getElementById('nomeTipo').value;
   let checklist = document.getElementById('checklistTipo').value.split('\n').map(x=>x.trim()).filter(Boolean);
   tiposDeTarefa[tipo] = checklist;
-  salvarDados(); renderTipos(); this.reset();
+  salvarTipos(); renderTipos(); this.reset();
   this.editando = undefined;
   this.querySelector('button').innerText = "Adicionar Tipo";
 };
 
-// Navegação
+////// NAVEGAÇÃO E INICIALIZAÇÃO //////
+
 function mostrarSecao(secao) {
   document.querySelectorAll('.section').forEach(div => div.classList.add('hidden'));
   if(secao==='menu') return;
   document.getElementById(`secao-${secao}`).classList.remove('hidden');
 }
 
-// Inicialização
 window.onload = function() {
-  carregarDados();
-  renderClientes();
-  renderTecnicos();
-  renderTipos();
+  carregarClientes(); renderClientes();
+  carregarTecnicos(); renderTecnicos();
+  carregarTipos(); renderTipos();
   mostrarSecao('menu');
 };
 </script>
