@@ -836,7 +836,6 @@ function exportarTarefasPDFSelecionadas(tipo='detalhado') {
   let dataEmissao = new Date().toLocaleString();
   let tituloRel = `Relatório de Tarefas ${tipo==='detalhado'?'(Detalhado)':'(Sintético)'}`;
   let html = '';
-  // Cabeçalho para cada página
   function getCabecalho() {
     return `
     <div class="pdf-header">
@@ -888,10 +887,25 @@ function exportarTarefasPDFSelecionadas(tipo='detalhado') {
     html += `</tbody></table>`;
     html += getRodape();
   } else {
+   tarefasSelecionadas.forEach(idx=>{
+      let t = tarefas[idx];
+      if(!t) return;
+      html += `<tr>
+        <td style="padding:7px 6px;">${t.titulo||''}</td>
+        <td style="padding:7px 6px;">${t.cliente||''}</td>
+        <td style="padding:7px 6px;">${t.tecnico||''}</td>
+        <td style="padding:7px 6px;">${t.tipo||''}</td>
+        <td style="padding:7px 6px;">${t.data||''}</td>
+        <td style="padding:7px 6px;font-weight:bold;color:${t.status==='concluida'?'#18c98c':'#ff9400'}">${t.status==='concluida'?'Executada':'Pendente'}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    html += getRodape();
+  } else {
     tarefasSelecionadas.forEach((idx, n)=>{
       let t = tarefas[idx];
       if(!t) return;
-      html += `<div class="pdf-tarefa-detalhe"${n>0?' style="page-break-before:always;"':''}>`;
+      html += `<div class="pdf-tarefa-detalhe"${n > 0 ? ' style="page-break-before: always;"' : ''}>`;
       html += getCabecalho();
       html += `
         <h3>${t.titulo||''}</h3>
