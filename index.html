@@ -293,9 +293,6 @@
       .checklist-list li { font-size: 0.96rem; gap: 12px; padding: 8px 7px 8px 6px; }
     }
     /* PDF ONLY */
-    @media print {
-      .page-break { page-break-after: always; }
-    }
     .pdf-tarefa-detalhe {
       padding: 24px 26px 18px 26px;
       border-radius: 18px;
@@ -303,6 +300,7 @@
       margin-bottom: 30px;
       box-shadow: 0 5px 24px #0001;
       border: 2px solid #e1e4ea;
+      page-break-before: always;
     }
     .pdf-tarefa-detalhe h3 {
       margin-top: 0;
@@ -346,6 +344,7 @@
     .pdf-tarefa-detalhe .pdf-item-ok { color: #18c98c; font-size: 1.18em; }
     .pdf-tarefa-detalhe .pdf-item-nok { color: #bbb; font-size: 1.13em; }
     .pdf-tarefa-detalhe .pdf-checklist-title { font-weight: 700; margin-bottom: 2px; color: #232f3e;}
+    .pdf-page-break { page-break-before: always; }
   </style>
 </head>
 <body>
@@ -356,8 +355,7 @@
     <button onclick="mostrarSecao('tipos')">Tipos de Tarefa</button>
     <button onclick="mostrarSecao('tarefas')">Tarefas</button>
   </div>
-
-  <!-- CLIENTES -->
+    <!-- CLIENTES -->
   <div id="secao-clientes" class="section hidden">
     <h2>Clientes</h2>
     <button onclick="mostrarSecao('menu')">Menu</button>
@@ -485,13 +483,12 @@
     </div>
     <div id="pdfArea" style="display:none"></div>
   </div>
-
-<script>
+  <script>
 let clientes = [], tecnicos = [], tiposDeTarefa = {}, tarefas = [];
 let expandedTarefa = {};
 let tarefasSelecionadas = [];
 
-// CLIENTES ... igual a antes
+// CLIENTES
 function salvarClientes() { localStorage.setItem('clientes', JSON.stringify(clientes)); }
 function carregarClientes() { clientes = JSON.parse(localStorage.getItem('clientes')||'[]'); }
 function renderClientes() {
@@ -543,7 +540,8 @@ document.getElementById('clienteForm').onsubmit = function(e) {
   }
   salvarClientes(); renderClientes(); this.reset();
 };
-// TÉCNICOS ... igual a antes
+
+// TÉCNICOS
 function salvarTecnicos() { localStorage.setItem('tecnicos', JSON.stringify(tecnicos)); }
 function carregarTecnicos() { tecnicos = JSON.parse(localStorage.getItem('tecnicos')||'[]'); }
 function renderTecnicos() {
@@ -595,7 +593,8 @@ document.getElementById('tecnicoForm').onsubmit = function(e) {
   }
   salvarTecnicos(); renderTecnicos(); this.reset();
 };
-// TIPOS ... igual a antes
+
+// TIPOS
 function salvarTipos() { localStorage.setItem('tiposDeTarefa', JSON.stringify(tiposDeTarefa)); }
 function carregarTipos() { tiposDeTarefa = JSON.parse(localStorage.getItem('tiposDeTarefa')||'{}'); }
 function renderTipos() {
@@ -634,7 +633,8 @@ document.getElementById('tipoForm').onsubmit = function(e) {
   this.editando = undefined;
   this.querySelector('button').innerText = "Adicionar Tipo";
 };
-// TAREFAS CRUD
+
+// TAREFAS
 function salvarTarefas() { localStorage.setItem('tarefas', JSON.stringify(tarefas)); }
 function carregarTarefas() { tarefas = JSON.parse(localStorage.getItem('tarefas')||'[]'); }
 function renderPreviewChecklist() {
@@ -664,6 +664,7 @@ document.getElementById('tarefaForm').onsubmit = function(e) {
   }
   salvarTarefas(); renderTarefas(); this.reset(); document.getElementById('preview-checklist').classList.add('hidden');
 };
+
 // Renderização de tarefas com seleção
 function renderTarefas() {
   let tbody = document.getElementById('tabelaTarefas').getElementsByTagName('tbody')[0];
@@ -781,7 +782,7 @@ function desselecionarTodasTarefas() {
   renderTarefas();
 }
 
-// PDF exportação organizada (visual moderno, quebra entre tarefas detalhadas)
+// PDF exportação
 function exportarTarefasPDFSelecionadas(tipo='sintetico') {
   if(tarefasSelecionadas.length===0) {
     alert("Selecione pelo menos uma tarefa para exportar!");
@@ -790,7 +791,6 @@ function exportarTarefasPDFSelecionadas(tipo='sintetico') {
   let area = document.getElementById('pdfArea');
   let dataEmissao = new Date().toLocaleString();
   let tituloRel = `Relatório de Tarefas ${tipo==='detalhado'?'(Detalhado)':'(Sintético)'}`;
-  // PDF Sintético: tabela única
   if (tipo === 'sintetico') {
     let html = `<div style="font-family:Segoe UI,Roboto,Arial,sans-serif;padding:18px;"><h2 style="color:#0a84ff">${tituloRel}</h2><p><b>Data de emissão:</b> ${dataEmissao}</p>`;
     html += `<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:1.04rem;">
@@ -820,12 +820,13 @@ function exportarTarefasPDFSelecionadas(tipo='sintetico') {
     html += `</tbody></table><p style="font-size:0.98rem;color:#666;">Relatório gerado automaticamente pelo sistema.</p></div>`;
     area.innerHTML = html;
   } else {
-    // Detalhado: cada tarefa em um cartão, com quebra de página
-    let html = `<div style="font-family:Segoe UI,Roboto,Arial,sans-serif;padding:18px;"><h2 style="color:#0a84ff">${tituloRel}</h2><p><b>Data de emissão:</b> ${dataEmissao}</p>`;
+    let html = `<div style="font-family:Segoe UI,Roboto,Arial,sans-serif;padding:0 0 0 0;">`;
     tarefasSelecionadas.forEach((idx, n)=>{
       let t = tarefas[idx];
       if(!t) return;
-      html += `<div class="pdf-tarefa-detalhe${n>0?' page-break':''}">
+      html += `<div class="pdf-tarefa-detalhe${n>0?' pdf-page-break':''}" style="margin-top:20px;">`;
+      if(n===0) html += `<h2 style="color:#0a84ff">${tituloRel}</h2><p><b>Data de emissão:</b> ${dataEmissao}</p>`;
+      html += `
         <h3>${t.titulo||''}</h3>
         <div class="pdf-info"><b>Cliente:</b> ${t.cliente||''}</div>
         <div class="pdf-info"><b>Técnico:</b> ${t.tecnico||''}</div>
@@ -840,19 +841,23 @@ function exportarTarefasPDFSelecionadas(tipo='sintetico') {
           <span style="${item.feito?'color:#18c98c;':'color:#232f3e;'}">${item.texto||''}</span>
         </li>`;
       });
-      html += `</ul></div>`;
+      html += `</ul>`;
+      if (n===tarefasSelecionadas.length-1) {
+        html += `<p style="font-size:0.98rem;color:#666;margin-top:20px;">Relatório gerado automaticamente pelo sistema.</p>`;
+      }
+      html += `</div>`;
     });
-    html += `<p style="font-size:0.98rem;color:#666;margin-top:20px;">Relatório gerado automaticamente pelo sistema.</p></div>`;
+    html += `</div>`;
     area.innerHTML = html;
   }
   area.style.display = "block";
   setTimeout(()=>{
     html2pdf().set({
-      margin: 0.6,
+      margin: 0.5,
       filename: `relatorio_tarefas_${tipo}_${new Date().toISOString().slice(0,10)}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     }).from(area).save().then(()=>{area.style.display="none";});
   }, 400);
 }
@@ -870,6 +875,7 @@ function editarTarefa(i) {
   form.editando = i;
   form.querySelector('button').innerText = "Salvar Alteração";
 }
+
 // SELECTS
 function atualizarSelects() {
   function setOptions(sel, arr, valFn, textFn) {
@@ -895,6 +901,7 @@ function atualizarSelects() {
   tipoArr.forEach(t=>fTipo.add(new Option(t,t)));
   fTipo.value = vTipo;
 }
+
 // EXPORTAÇÃO/IMPORTAÇÃO/FILTROS/NAVEGAÇÃO
 function exportarJSON() {
   let dados = {clientes,tecnicos,tiposDeTarefa,tarefas};
