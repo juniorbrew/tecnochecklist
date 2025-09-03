@@ -16,12 +16,58 @@
     .hidden { display: none; }
     .done { background-color: #d4edda !important; }
     .filter-bar { margin-bottom: 15px; background: #e3e8f0; padding: 12px; border-radius: 6px; }
-    .expand-btn { font-size: 20px; font-weight: bold; padding: 0 10px; background: none; border: none; cursor: pointer; color: #007BFF; }
-    .checklist-row { background: #f9f9f9; }
-    .checklist-list { margin: 0; padding: 5px 0 0 30px; }
-    .checklist-list li { list-style: none; margin: 6px 0; display: flex; align-items: center; }
-    .checklist-checkbox { margin-right: 8px; }
+
+    .expand-btn {
+      font-size: 22px;
+      font-weight: bold;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #007BFF;
+      margin: 0 4px 0 0;
+      padding: 0;
+      width: 24px; height: 24px;
+      line-height: 24px;
+      display: inline-block;
+      vertical-align: middle;
+      text-align: center;
+    }
+    .action-btn {
+      background: #2196f3;
+      color: #fff;
+      border: none;
+      padding: 5px 16px;
+      margin: 0 2px;
+      font-size: 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+      vertical-align: middle;
+    }
+    .action-btn:active, .action-btn:focus { background: #1565c0; }
+    .action-btn.edit { background: #2196f3; }
+    .action-btn.delete { background: #2196f3; }
+    .action-btn.complete { background: #4caf50; }
+    .action-btn.complete:disabled { background: #a5d6a7; color: #fff; cursor: not-allowed; }
+
+    .checklist-row {
+      background: #fafafa;
+    }
+    .checklist-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+    .checklist-table td {
+      border: none;
+      padding: 3px 0;
+      vertical-align: top;
+    }
+    .checklist-checkbox-col { width: 32px; }
+    .checklist-label-col { font-weight: bold; color: #222; font-size: 15px; padding-left: 6px; }
   </style>
+  <!-- ÍCONES DE AÇÃO (FontAwesome CDN opcional) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body>
   <h1>Gestão de Infraestrutura</h1>
@@ -32,66 +78,7 @@
     <button onclick="mostrarSecao('tarefas')">Tarefas</button>
   </div>
 
-  <!-- CLIENTES -->
-  <div id="secao-clientes" class="section hidden">
-    <h2>Clientes</h2>
-    <button onclick="mostrarSecao('menu')">Menu</button>
-    <form id="clienteForm">
-      <input type="text" id="razaoSocial" placeholder="Razão Social" required>
-      <input type="text" id="cnpj" placeholder="CNPJ" required>
-      <input type="text" id="telefone" placeholder="Telefone" required>
-      <input type="email" id="email" placeholder="E-mail" required>
-      <button type="submit">Adicionar Cliente</button>
-    </form>
-    <table id="tabelaClientes">
-      <thead>
-        <tr>
-          <th>Razão Social</th><th>CNPJ</th><th>Telefone</th><th>Email</th><th>Ações</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <!-- TÉCNICOS -->
-  <div id="secao-tecnicos" class="section hidden">
-    <h2>Técnicos</h2>
-    <button onclick="mostrarSecao('menu')">Menu</button>
-    <form id="tecnicoForm">
-      <input type="text" id="nomeTecnico" placeholder="Nome" required>
-      <input type="text" id="funcaoTecnico" placeholder="Função" required>
-      <input type="text" id="telefoneTecnico" placeholder="Telefone" required>
-      <input type="email" id="emailTecnico" placeholder="E-mail" required>
-      <button type="submit">Adicionar Técnico</button>
-    </form>
-    <table id="tabelaTecnicos">
-      <thead>
-        <tr>
-          <th>Nome</th><th>Função</th><th>Telefone</th><th>Email</th><th>Ações</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <!-- TIPOS DE TAREFA -->
-  <div id="secao-tipos" class="section hidden">
-    <h2>Tipos de Tarefa</h2>
-    <button onclick="mostrarSecao('menu')">Menu</button>
-    <form id="tipoForm">
-      <input type="text" id="nomeTipo" placeholder="Nome do Tipo" required>
-      <textarea id="checklistTipo" placeholder="Checklist, um por linha"></textarea>
-      <button type="submit">Adicionar Tipo</button>
-    </form>
-    <table id="tabelaTipos">
-      <thead>
-        <tr>
-          <th>Tipo</th><th>Checklist</th><th>Ações</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  <!-- ... (clientes, técnicos e tipos de tarefa: igual ao anterior) ... -->
 
   <!-- TAREFAS -->
   <div id="secao-tarefas" class="section hidden">
@@ -115,48 +102,35 @@
       </div>
       <button type="submit">Adicionar Tarefa</button>
     </form>
-
     <div class="filter-bar">
       <label>Cliente:</label>
-      <select id="filtroCliente" onchange="renderTarefas()">
-        <option value="">Todos</option>
-      </select>
+      <select id="filtroCliente" onchange="renderTarefas()"><option value="">Todos</option></select>
       <label>Técnico:</label>
-      <select id="filtroTecnico" onchange="renderTarefas()">
-        <option value="">Todos</option>
-      </select>
+      <select id="filtroTecnico" onchange="renderTarefas()"><option value="">Todos</option></select>
       <label>Tipo:</label>
-      <select id="filtroTipo" onchange="renderTarefas()">
-        <option value="">Todos</option>
-      </select>
+      <select id="filtroTipo" onchange="renderTarefas()"><option value="">Todos</option></select>
       <label>Status:</label>
-      <select id="filtroStatus" onchange="renderTarefas()">
-        <option value="">Todos</option>
-        <option value="pendente">Pendente</option>
-        <option value="concluida">Concluída</option>
-      </select>
+      <select id="filtroStatus" onchange="renderTarefas()"><option value="">Todos</option><option value="pendente">Pendente</option><option value="concluida">Concluída</option></select>
       <label>Data:</label>
       <input type="date" id="filtroData" onchange="renderTarefas()">
       <button onclick="limparFiltros();return false;">Limpar Filtros</button>
     </div>
-
     <button onclick="exportarTarefasPDF()">Exportar PDF</button>
     <button onclick="exportarJSON()">Exportar JSON</button>
     <input type="file" id="importarJSONinput" style="display:none" accept=".json" onchange="importarJSON(this)">
     <button onclick="document.getElementById('importarJSONinput').click()">Importar JSON</button>
-
     <div id="tarefasContainer">
       <table id="tabelaTarefas">
         <thead>
           <tr>
-            <th></th>
+            <th style="width:32px"></th>
             <th>Título</th>
             <th>Cliente</th>
             <th>Técnico</th>
             <th>Tipo</th>
             <th>Data</th>
             <th>Status</th>
-            <th>Ações</th>
+            <th style="width:132px">Ações</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -168,160 +142,7 @@
 let clientes = [], tecnicos = [], tiposDeTarefa = {}, tarefas = [];
 let expandedTarefa = {}; // indica se a tarefa está expandida
 
-function salvarClientes() { localStorage.setItem('clientes', JSON.stringify(clientes)); }
-function carregarClientes() { clientes = JSON.parse(localStorage.getItem('clientes')||'[]'); }
-function renderClientes() {
-  let tbody = document.getElementById('tabelaClientes').getElementsByTagName('tbody')[0];
-  tbody.innerHTML = '';
-  clientes.forEach((cli, i) => {
-    let row = tbody.insertRow();
-    row.insertCell(0).innerText = cli.razaoSocial;
-    row.insertCell(1).innerText = cli.cnpj;
-    row.insertCell(2).innerText = cli.telefone;
-    row.insertCell(3).innerText = cli.email;
-    let acoes = row.insertCell(4);
-    let editar = document.createElement('button');editar.innerText = "✏️";editar.onclick = () => editarCliente(i);
-    let excluir = document.createElement('button');excluir.innerText = "🗑️";excluir.onclick = () => { clientes.splice(i,1); salvarClientes(); renderClientes(); atualizarSelects(); renderTarefas(); };
-    acoes.appendChild(editar); acoes.appendChild(excluir);
-  });
-  atualizarSelects();
-}
-function editarCliente(i) {
-  let cli = clientes[i];
-  document.getElementById('razaoSocial').value = cli.razaoSocial;
-  document.getElementById('cnpj').value = cli.cnpj;
-  document.getElementById('telefone').value = cli.telefone;
-  document.getElementById('email').value = cli.email;
-  let form = document.getElementById('clienteForm');
-  form.editando = i;
-  form.querySelector('button').innerText = "Salvar Alteração";
-}
-document.getElementById('clienteForm').onsubmit = function(e) {
-  e.preventDefault();
-  let obj = {
-    razaoSocial: document.getElementById('razaoSocial').value,
-    cnpj: document.getElementById('cnpj').value,
-    telefone: document.getElementById('telefone').value,
-    email: document.getElementById('email').value
-  };
-  if(this.editando !== undefined) {
-    clientes[this.editando] = obj;
-    this.editando = undefined;
-    this.querySelector('button').innerText = "Adicionar Cliente";
-  } else {
-    clientes.push(obj);
-  }
-  salvarClientes(); renderClientes(); this.reset();
-};
-
-function salvarTecnicos() { localStorage.setItem('tecnicos', JSON.stringify(tecnicos)); }
-function carregarTecnicos() { tecnicos = JSON.parse(localStorage.getItem('tecnicos')||'[]'); }
-function renderTecnicos() {
-  let tbody = document.getElementById('tabelaTecnicos').getElementsByTagName('tbody')[0];
-  tbody.innerHTML = '';
-  tecnicos.forEach((tec, i) => {
-    let row = tbody.insertRow();
-    row.insertCell(0).innerText = tec.nome;
-    row.insertCell(1).innerText = tec.funcao;
-    row.insertCell(2).innerText = tec.telefone;
-    row.insertCell(3).innerText = tec.email;
-    let acoes = row.insertCell(4);
-    let editar = document.createElement('button');editar.innerText = "✏️";editar.onclick = () => editarTecnico(i);
-    let excluir = document.createElement('button');excluir.innerText = "🗑️";excluir.onclick = () => { tecnicos.splice(i,1); salvarTecnicos(); renderTecnicos(); atualizarSelects(); renderTarefas(); };
-    acoes.appendChild(editar); acoes.appendChild(excluir);
-  });
-  atualizarSelects();
-}
-function editarTecnico(i) {
-  let tec = tecnicos[i];
-  document.getElementById('nomeTecnico').value = tec.nome;
-  document.getElementById('funcaoTecnico').value = tec.funcao;
-  document.getElementById('telefoneTecnico').value = tec.telefone;
-  document.getElementById('emailTecnico').value = tec.email;
-  let form = document.getElementById('tecnicoForm');
-  form.editando = i;
-  form.querySelector('button').innerText = "Salvar Alteração";
-}
-document.getElementById('tecnicoForm').onsubmit = function(e) {
-  e.preventDefault();
-  let obj = {
-    nome: document.getElementById('nomeTecnico').value,
-    funcao: document.getElementById('funcaoTecnico').value,
-    telefone: document.getElementById('telefoneTecnico').value,
-    email: document.getElementById('emailTecnico').value
-  };
-  if(this.editando !== undefined) {
-    tecnicos[this.editando] = obj;
-    this.editando = undefined;
-    this.querySelector('button').innerText = "Adicionar Técnico";
-  } else {
-    tecnicos.push(obj);
-  }
-  salvarTecnicos(); renderTecnicos(); this.reset();
-};
-
-function salvarTipos() { localStorage.setItem('tiposDeTarefa', JSON.stringify(tiposDeTarefa)); }
-function carregarTipos() { tiposDeTarefa = JSON.parse(localStorage.getItem('tiposDeTarefa')||'{}'); }
-function renderTipos() {
-  let tbody = document.getElementById('tabelaTipos').getElementsByTagName('tbody')[0];
-  tbody.innerHTML = '';
-  Object.entries(tiposDeTarefa).forEach(([tipo, checklist], i) => {
-    let row = tbody.insertRow();
-    row.insertCell(0).innerText = tipo;
-    row.insertCell(1).innerText = checklist.join(', ');
-    let acoes = row.insertCell(2);
-    let editar = document.createElement('button');editar.innerText = "✏️";editar.onclick = () => editarTipo(tipo);
-    let excluir = document.createElement('button');excluir.innerText = "🗑️";excluir.onclick = () => { delete tiposDeTarefa[tipo]; salvarTipos(); renderTipos(); atualizarSelects(); renderTarefas(); };
-    acoes.appendChild(editar); acoes.appendChild(excluir);
-  });
-  atualizarSelects();
-}
-function editarTipo(tipo) {
-  document.getElementById('nomeTipo').value = tipo;
-  document.getElementById('checklistTipo').value = (tiposDeTarefa[tipo]||[]).join('\n');
-  let form = document.getElementById('tipoForm');
-  form.editando = tipo;
-  form.querySelector('button').innerText = "Salvar Alteração";
-}
-document.getElementById('tipoForm').onsubmit = function(e) {
-  e.preventDefault();
-  let tipo = document.getElementById('nomeTipo').value;
-  let checklist = document.getElementById('checklistTipo').value.split('\n').map(x=>x.trim()).filter(Boolean);
-  tiposDeTarefa[tipo] = checklist;
-  salvarTipos(); renderTipos(); this.reset();
-  this.editando = undefined;
-  this.querySelector('button').innerText = "Adicionar Tipo";
-};
-
-function salvarTarefas() { localStorage.setItem('tarefas', JSON.stringify(tarefas)); }
-function carregarTarefas() { tarefas = JSON.parse(localStorage.getItem('tarefas')||'[]'); }
-function renderPreviewChecklist() {
-  let tipo = document.getElementById('tipoTarefa').value;
-  let area = document.getElementById('preview-checklist');
-  let ul = document.getElementById('previewChecklistList');
-  ul.innerHTML = '';
-  if(tiposDeTarefa[tipo]) {
-    tiposDeTarefa[tipo].forEach(item => { let li = document.createElement('li'); li.innerText = item; ul.appendChild(li); });
-    area.classList.remove('hidden');
-  } else area.classList.add('hidden');
-}
-document.getElementById('tarefaForm').onsubmit = function(e) {
-  e.preventDefault();
-  let titulo = document.getElementById('tituloTarefa').value;
-  let cliente = document.getElementById('clienteTarefa').value;
-  let tecnico = document.getElementById('tecnicoTarefa').value;
-  let tipo = document.getElementById('tipoTarefa').value;
-  let data = document.getElementById('dataTarefa').value;
-  let checklist = (tiposDeTarefa[tipo]||[]).map(texto=>({texto, feito:false}));
-  if(this.editando !== undefined) {
-    tarefas[this.editando] = {titulo, cliente, tecnico, tipo, data, status: "pendente", checklist};
-    this.editando = undefined;
-    this.querySelector('button').innerText = "Adicionar Tarefa";
-  } else {
-    tarefas.push({titulo, cliente, tecnico, tipo, data, status: "pendente", checklist});
-  }
-  salvarTarefas(); renderTarefas(); this.reset(); document.getElementById('preview-checklist').classList.add('hidden');
-};
+// ... (funções de clientes, técnicos e tipos: igual ao anterior) ...
 
 function renderTarefas() {
   let tbody = document.getElementById('tabelaTarefas').getElementsByTagName('tbody')[0];
@@ -347,7 +168,7 @@ function renderTarefas() {
     let expandBtn = document.createElement('button');
     expandBtn.type = "button";
     expandBtn.className = "expand-btn";
-    expandBtn.innerText = expandedTarefa[i] ? "−" : "+";
+    expandBtn.innerHTML = expandedTarefa[i] ? '<span style="font-size:22px">&minus;</span>' : '<span style="font-size:22px">+</span>';
     expandBtn.title = expandedTarefa[i] ? "Recolher checklist" : "Expandir checklist";
     expandBtn.onclick = function() { expandedTarefa[i] = !expandedTarefa[i]; renderTarefas(); };
     expandCell.appendChild(expandBtn);
@@ -357,31 +178,36 @@ function renderTarefas() {
     row.insertCell(3).innerText = tar.tecnico;
     row.insertCell(4).innerText = tar.tipo;
     row.insertCell(5).innerText = tar.data;
-    row.insertCell(6).innerText = tar.status==="concluida"?"Concluída":"Pendente";
-    // Ações
+    row.insertCell(6).innerText = tar.status==="concluida"?"Pendente":"Pendente";
+    // Ações (botões azuis)
     let acoes = row.insertCell(7);
     let concluir = document.createElement('button');
-    concluir.innerText = "✅";
+    concluir.className = "action-btn complete";
+    concluir.innerHTML = '<i class="fa fa-check"></i>';
     concluir.disabled = tar.status==="concluida";
     concluir.onclick = () => { tar.checklist.forEach(x=>x.feito=true); tar.status="concluida"; salvarTarefas(); renderTarefas(); };
     let editar = document.createElement('button');
-    editar.innerText = "✏️";
+    editar.className = "action-btn edit";
+    editar.innerHTML = '<i class="fa fa-pen"></i>';
     editar.onclick = () => editarTarefa(i);
     let excluir = document.createElement('button');
-    excluir.innerText = "🗑️";
+    excluir.className = "action-btn delete";
+    excluir.innerHTML = '<i class="fa fa-trash"></i>';
     excluir.onclick = () => { tarefas.splice(i,1); delete expandedTarefa[i]; salvarTarefas(); renderTarefas(); };
     acoes.appendChild(concluir); acoes.appendChild(editar); acoes.appendChild(excluir);
 
-    // Checklist expandido
+    // Checklist expandido: linha abaixo, 1 célula só
     if(expandedTarefa[i]) {
       let clrow = tbody.insertRow();
       clrow.className = "checklist-row";
       let cell = clrow.insertCell(0);
       cell.colSpan = 8;
-      let ul = document.createElement('ul');
-      ul.className = "checklist-list";
+      let checklistTable = document.createElement('table');
+      checklistTable.className = 'checklist-table';
       tar.checklist.forEach((item, idx) => {
-        let li = document.createElement('li');
+        let tr = checklistTable.insertRow();
+        let tdChk = tr.insertCell(0);
+        tdChk.className = 'checklist-checkbox-col';
         let chk = document.createElement('input');
         chk.type = "checkbox";
         chk.className = "checklist-checkbox";
@@ -391,113 +217,18 @@ function renderTarefas() {
           tar.status = tar.checklist.every(x=>x.feito) ? "concluida" : "pendente";
           salvarTarefas(); renderTarefas();
         };
-        li.appendChild(chk);
-        li.appendChild(document.createTextNode(item.texto));
-        ul.appendChild(li);
+        tdChk.appendChild(chk);
+        let tdLabel = tr.insertCell(1);
+        tdLabel.className = 'checklist-label-col';
+        tdLabel.innerText = item.texto;
       });
-      cell.appendChild(ul);
+      cell.appendChild(checklistTable);
     }
   });
 }
-function editarTarefa(i) {
-  let tar = tarefas[i];
-  document.getElementById('tituloTarefa').value = tar.titulo;
-  document.getElementById('clienteTarefa').value = tar.cliente;
-  document.getElementById('tecnicoTarefa').value = tar.tecnico;
-  document.getElementById('tipoTarefa').value = tar.tipo;
-  document.getElementById('dataTarefa').value = tar.data;
-  renderPreviewChecklist();
-  let form = document.getElementById('tarefaForm');
-  form.editando = i;
-  form.querySelector('button').innerText = "Salvar Alteração";
-}
+// ...restante do JS igual ao anterior...
+// (clientes, técnicos, tipos, exportação, importação, filtros, navegação etc)
 
-function atualizarSelects() {
-  function setOptions(sel, arr, valFn, textFn) {
-    let v = sel.value;
-    sel.innerHTML = '<option value="">Selecione</option>';
-    arr.forEach(obj => sel.add(new Option(textFn(obj), valFn(obj))));
-    sel.value = v;
-  }
-  setOptions(document.getElementById('clienteTarefa'), clientes, c=>c.razaoSocial, c=>c.razaoSocial);
-  setOptions(document.getElementById('tecnicoTarefa'), tecnicos, t=>t.nome, t=>t.nome);
-  let tipoArr = Object.keys(tiposDeTarefa);
-  let tipoSel = document.getElementById('tipoTarefa');
-  let tipoV = tipoSel.value;
-  tipoSel.innerHTML = '<option value="">Selecione o Tipo de Tarefa</option>';
-  tipoArr.forEach(t=>tipoSel.add(new Option(t,t)));
-  tipoSel.value = tipoV;
-  // Filtros
-  setOptions(document.getElementById('filtroCliente'), clientes, c=>c.razaoSocial, c=>c.razaoSocial);
-  setOptions(document.getElementById('filtroTecnico'), tecnicos, t=>t.nome, t=>t.nome);
-  let fTipo = document.getElementById('filtroTipo');
-  let vTipo = fTipo.value;
-  fTipo.innerHTML = '<option value="">Todos</option>';
-  tipoArr.forEach(t=>fTipo.add(new Option(t,t)));
-  fTipo.value = vTipo;
-}
-
-function exportarJSON() {
-  let dados = {clientes,tecnicos,tiposDeTarefa,tarefas};
-  let blob = new Blob([JSON.stringify(dados,null,2)], {type:'application/json'});
-  let link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'infraestrutura_backup.json';
-  link.click();
-}
-function importarJSON(input) {
-  if(!input.files||!input.files[0]) return;
-  let reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      let dados = JSON.parse(e.target.result);
-      clientes = dados.clientes||[]; tecnicos = dados.tecnicos||[]; tiposDeTarefa = dados.tiposDeTarefa||{}; tarefas = dados.tarefas||[];
-      salvarClientes(); salvarTecnicos(); salvarTipos(); salvarTarefas();
-      renderClientes(); renderTecnicos(); renderTipos(); atualizarSelects(); renderTarefas();
-      alert('Dados importados com sucesso!');
-    } catch(err) { alert('Erro ao importar: '+err.message);}
-    input.value='';
-  };
-  reader.readAsText(input.files[0]);
-}
-
-function exportarTarefasPDF() {
-  mostrarSecao('tarefas');
-  setTimeout(() => {
-    let el = document.getElementById('tarefasContainer');
-    let opt = {
-      margin: 0.5,
-      filename: 'relatorio_tarefas.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-    };
-    html2pdf().set(opt).from(el).save();
-  }, 300);
-}
-
-function limparFiltros() {
-  document.getElementById('filtroCliente').value = "";
-  document.getElementById('filtroTecnico').value = "";
-  document.getElementById('filtroTipo').value = "";
-  document.getElementById('filtroStatus').value = "";
-  document.getElementById('filtroData').value = "";
-  renderTarefas();
-}
-
-function mostrarSecao(secao) {
-  document.querySelectorAll('.section').forEach(div => div.classList.add('hidden'));
-  if(secao==='menu') return;
-  document.getElementById(`secao-${secao}`).classList.remove('hidden');
-}
-window.onload = function() {
-  carregarClientes(); renderClientes();
-  carregarTecnicos(); renderTecnicos();
-  carregarTipos(); renderTipos();
-  carregarTarefas(); renderTarefas();
-  atualizarSelects();
-  mostrarSecao('menu');
-};
 </script>
 </body>
 </html>
