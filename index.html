@@ -324,7 +324,7 @@
       margin-bottom: 30px;
       box-shadow: 0 5px 18px #0001;
       border: 2px solid #e1e4ea;
-      page-break-before: always;
+      /* page-break-before: always; REMOVIDO AQUI, AGORA É INLINE NO JS */
     }
     .pdf-tarefa-detalhe h3 {
       margin-top: 0;
@@ -397,7 +397,8 @@
     <button onclick="mostrarSecao('tipos')">Tipos de Tarefa</button>
     <button onclick="mostrarSecao('tarefas')">Tarefas</button>
   </div>
-    <!-- CLIENTES -->
+
+  <!-- CLIENTES -->
   <div id="secao-clientes" class="section hidden">
     <h2>Clientes</h2>
     <button onclick="mostrarSecao('menu')">Menu</button>
@@ -525,7 +526,8 @@
     </div>
     <div id="pdfArea" style="display:none"></div>
   </div>
-  <script>
+
+<script>
 const LOGO_TECNOEXPRESS = "https://oaidalleapiprodscus.blob.core.windows.net/private/org-xc3nQCYm3YbVfPMoQm1IJBtN/user-0uH6s6b7jzGfWm2lZ9l7Cw6v/img-5cGDiV7oXn6eVh8j3mgRLhnl.png?st=2023-09-02T23%3A52%3A16Z&se=2123-09-02T23%3A52%3A16Z&sp=r&sv=2021-08-06&sr=b&rscd=inline&rsct=image&skoid=7a1775f3-68ba-49b7-9b53-0f02f54cba63&sktid=7b1d0c9d-77b6-45b2-9e6e-4a34d3d7ed19&skt=2023-09-02T23%3A52%3A16Z&ske=2123-09-02T23%3A52%3A16Z&sks=b&skv=2021-08-06&sig=N%2Fz7bP1Gq1R%2B7mq3pBv2hZKhZQbDTSu5vJfD5KpQb3c%3D";
 
 let clientes = [], tecnicos = [], tiposDeTarefa = {}, tarefas = [];
@@ -826,7 +828,7 @@ function desselecionarTodasTarefas() {
   renderTarefas();
 }
 
-// PDF exportação (com logo, cabeçalho e rodapé)
+// PDF exportação (com logo, cabeçalho e rodapé) — CORRIGIDO!
 function exportarTarefasPDFSelecionadas(tipo='detalhado') {
   if(tarefasSelecionadas.length===0) {
     alert("Selecione pelo menos uma tarefa para exportar!");
@@ -845,7 +847,6 @@ function exportarTarefasPDFSelecionadas(tipo='detalhado') {
       <span class="data">Emitido em: ${dataEmissao}</span>
     </div>`;
   }
-  // Rodapé simples com espaço para assinatura
   function getRodape() {
     return `
       <div class="pdf-rodape">
@@ -857,7 +858,6 @@ function exportarTarefasPDFSelecionadas(tipo='detalhado') {
       </div>
     `;
   }
-  // Modo sintético: tabela
   if (tipo === 'sintetico') {
     html += getCabecalho();
     html += `<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:1.04rem;">
@@ -873,21 +873,6 @@ function exportarTarefasPDFSelecionadas(tipo='detalhado') {
       </thead>
       <tbody>`;
     tarefasSelecionadas.forEach(idx=>{
-      let t = tarefas[idx];
-      if(!t) return;
-      html += `<tr>
-        <td style="padding:7px 6px;">${t.titulo||''}</td>
-        <td style="padding:7px 6px;">${t.cliente||''}</td>
-        <td style="padding:7px 6px;">${t.tecnico||''}</td>
-        <td style="padding:7px 6px;">${t.tipo||''}</td>
-        <td style="padding:7px 6px;">${t.data||''}</td>
-        <td style="padding:7px 6px;font-weight:bold;color:${t.status==='concluida'?'#18c98c':'#ff9400'}">${t.status==='concluida'?'Executada':'Pendente'}</td>
-      </tr>`;
-    });
-    html += `</tbody></table>`;
-    html += getRodape();
-  } else {
-   tarefasSelecionadas.forEach(idx=>{
       let t = tarefas[idx];
       if(!t) return;
       html += `<tr>
