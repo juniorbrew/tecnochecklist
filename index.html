@@ -37,19 +37,20 @@
     .action-btn.edit { background: #1e88e5; }
     .action-btn.delete { background: #007BFF; }
     .checklist-row { background: #fafafa; }
-    .checklist-table {
-      width: 100%; border-collapse: separate; border-spacing: 0 8px;
+    .checklist-expand-cell { padding: 12px 0 12px 8px !important; }
+    .checklist-list { margin: 0; padding: 0; }
+    .checklist-list li { list-style: none; margin: 7px 0; }
+    .checklist-label {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: bold; font-size: 15px;
     }
-    .checklist-table td { border: none; padding: 0 0 0 0; vertical-align: top;}
-    .checklist-checkbox-col { width: 40px; }
-    .checklist-label-col { font-weight:bold; color:#222; font-size:15px; padding-left:12px; }
-    .checklist-checkbox { margin:0 0 0 20px; }
+    .checklist-label input[type=checkbox] { margin-left: 2px; margin-right: 2px; }
     .expand-btn:focus { outline: 1px solid #007BFF; }
     .action-btn:focus { outline: 2px solid #1565c0; }
     .menu-bar > button { padding: 8px 16px; font-size: 15px; background: #2196f3; margin: 0 4px 10px 0; border-radius: 4px;}
     .menu-bar { text-align: center; margin-bottom: 24px; }
     @media (max-width: 900px) {
-      .checklist-label-col { font-size: 12px; }
+      .checklist-label { font-size: 12px; }
       .action-btn { font-size: 13px; padding: 6px 8px;}
       th, td { padding: 6px 2px; font-size: 13px; }
     }
@@ -420,27 +421,29 @@ function renderTarefas() {
       clrow.className = "checklist-row";
       let cell = clrow.insertCell(0);
       cell.colSpan = 8;
-      let checklistTable = document.createElement('table');
-      checklistTable.className = 'checklist-table';
+      cell.className = "checklist-expand-cell";
+      let ul = document.createElement('ul');
+      ul.className = "checklist-list";
       tar.checklist.forEach((item, idx) => {
-        let tr = checklistTable.insertRow();
-        let tdChk = tr.insertCell(0);
-        tdChk.className = 'checklist-checkbox-col';
+        let li = document.createElement('li');
+        let label = document.createElement('label');
+        label.className = "checklist-label";
         let chk = document.createElement('input');
         chk.type = "checkbox";
-        chk.className = "checklist-checkbox";
         chk.checked = item.feito;
         chk.onchange = function() {
           tar.checklist[idx].feito = this.checked;
           tar.status = tar.checklist.every(x=>x.feito) ? "concluida" : "pendente";
           salvarTarefas(); renderTarefas();
         };
-        tdChk.appendChild(chk);
-        let tdLabel = tr.insertCell(1);
-        tdLabel.className = 'checklist-label-col';
-        tdLabel.innerText = item.texto;
+        label.appendChild(chk);
+        let txt = document.createElement('span');
+        txt.textContent = item.texto;
+        label.appendChild(txt);
+        li.appendChild(label);
+        ul.appendChild(li);
       });
-      cell.appendChild(checklistTable);
+      cell.appendChild(ul);
     }
   });
 }
@@ -510,16 +513,20 @@ function importarJSON(input) {
 function exportarTarefasPDF() {
   mostrarSecao('tarefas');
   setTimeout(() => {
-    let el = document.getElementById('tarefasContainer');
-    let opt = {
-      margin: 0.5,
-      filename: 'relatorio_tarefas.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-    };
-    html2pdf().set(opt).from(el).save();
-  }, 300);
+    // Garante renderização antes do PDF
+    renderTarefas();
+    setTimeout(() => {
+      let el = document.getElementById('tarefasContainer');
+      let opt = {
+        margin: 0.5,
+        filename: 'relatorio_tarefas.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+      };
+      html2pdf().set(opt).from(el).save();
+    }, 250);
+  }, 100);
 }
 function limparFiltros() {
   document.getElementById('filtroCliente').value = "";
