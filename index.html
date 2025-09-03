@@ -166,7 +166,7 @@
 
 <script>
 let clientes = [], tecnicos = [], tiposDeTarefa = {}, tarefas = [];
-let expandedTarefas = {}; // guarda quais tarefas estão expandidas
+let expandedTarefa = {}; // indica se a tarefa está expandida
 
 function salvarClientes() { localStorage.setItem('clientes', JSON.stringify(clientes)); }
 function carregarClientes() { clientes = JSON.parse(localStorage.getItem('clientes')||'[]'); }
@@ -337,17 +337,19 @@ function renderTarefas() {
     if(ftip && tar.tipo!==ftip) return;
     if(fs && ((fs==='pendente' && tar.status!=='pendente')||(fs==='concluida'&&tar.status!=='concluida'))) return;
     if(fd && tar.data!==fd) return;
-    // Tarefa row
+
+    // Linha principal da tarefa
     let row = tbody.insertRow();
     if(tar.status==="concluida") row.classList.add('done');
-    // Expand/Collapse
+
+    // Botão expandir/recolher
     let expandCell = row.insertCell(0);
     let expandBtn = document.createElement('button');
     expandBtn.type = "button";
     expandBtn.className = "expand-btn";
-    expandBtn.innerText = expandedTarefas[i] ? "−" : "+";
-    expandBtn.title = expandedTarefas[i] ? "Recolher checklist" : "Expandir checklist";
-    expandBtn.onclick = function() { expandedTarefas[i] = !expandedTarefas[i]; renderTarefas(); };
+    expandBtn.innerText = expandedTarefa[i] ? "−" : "+";
+    expandBtn.title = expandedTarefa[i] ? "Recolher checklist" : "Expandir checklist";
+    expandBtn.onclick = function() { expandedTarefa[i] = !expandedTarefa[i]; renderTarefas(); };
     expandCell.appendChild(expandBtn);
 
     row.insertCell(1).innerText = tar.titulo;
@@ -367,11 +369,11 @@ function renderTarefas() {
     editar.onclick = () => editarTarefa(i);
     let excluir = document.createElement('button');
     excluir.innerText = "🗑️";
-    excluir.onclick = () => { tarefas.splice(i,1); delete expandedTarefas[i]; salvarTarefas(); renderTarefas(); };
+    excluir.onclick = () => { tarefas.splice(i,1); delete expandedTarefa[i]; salvarTarefas(); renderTarefas(); };
     acoes.appendChild(concluir); acoes.appendChild(editar); acoes.appendChild(excluir);
 
-    // Checklist row (expandido)
-    if(expandedTarefas[i]) {
+    // Checklist expandido
+    if(expandedTarefa[i]) {
       let clrow = tbody.insertRow();
       clrow.className = "checklist-row";
       let cell = clrow.insertCell(0);
