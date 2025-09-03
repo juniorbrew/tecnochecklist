@@ -16,6 +16,11 @@
     .hidden { display: none; }
     .done { background-color: #d4edda !important; }
     .filter-bar { margin-bottom: 15px; background: #e3e8f0; padding: 12px; border-radius: 6px; }
+    .expand-btn { font-size: 20px; font-weight: bold; padding: 0 10px; background: none; border: none; cursor: pointer; color: #007BFF; }
+    .checklist-row { background: #f9f9f9; }
+    .checklist-list { margin: 0; padding: 0 0 0 30px; }
+    .checklist-list li { list-style: none; margin: 5px 0; }
+    .checklist-checkbox { margin-right: 8px; }
   </style>
 </head>
 <body>
@@ -144,13 +149,13 @@
       <table id="tabelaTarefas">
         <thead>
           <tr>
+            <th></th>
             <th>Título</th>
             <th>Cliente</th>
             <th>Técnico</th>
             <th>Tipo</th>
             <th>Data</th>
             <th>Status</th>
-            <th>Checklist</th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -160,11 +165,9 @@
   </div>
 
 <script>
-// DADOS
-let clientes = [], tecnicos = [], tiposDeTarefa = {}; // tiposDeTarefa: {tipo: [item1, item2, ...]}
-let tarefas = []; // {titulo, cliente, tecnico, tipo, data, status, checklist: [{texto,feito}]}
+let clientes = [], tecnicos = [], tiposDeTarefa = {}, tarefas = [];
+let expandedTarefas = {}; // guarda quais tarefas estão expandidas
 
-// CLIENTES
 function salvarClientes() { localStorage.setItem('clientes', JSON.stringify(clientes)); }
 function carregarClientes() { clientes = JSON.parse(localStorage.getItem('clientes')||'[]'); }
 function renderClientes() {
@@ -211,7 +214,6 @@ document.getElementById('clienteForm').onsubmit = function(e) {
   salvarClientes(); renderClientes(); this.reset();
 };
 
-// TÉCNICOS
 function salvarTecnicos() { localStorage.setItem('tecnicos', JSON.stringify(tecnicos)); }
 function carregarTecnicos() { tecnicos = JSON.parse(localStorage.getItem('tecnicos')||'[]'); }
 function renderTecnicos() {
@@ -258,7 +260,6 @@ document.getElementById('tecnicoForm').onsubmit = function(e) {
   salvarTecnicos(); renderTecnicos(); this.reset();
 };
 
-// TIPOS DE TAREFA
 function salvarTipos() { localStorage.setItem('tiposDeTarefa', JSON.stringify(tiposDeTarefa)); }
 function carregarTipos() { tiposDeTarefa = JSON.parse(localStorage.getItem('tiposDeTarefa')||'{}'); }
 function renderTipos() {
@@ -292,7 +293,6 @@ document.getElementById('tipoForm').onsubmit = function(e) {
   this.querySelector('button').innerText = "Adicionar Tipo";
 };
 
-// TAREFAS
 function salvarTarefas() { localStorage.setItem('tarefas', JSON.stringify(tarefas)); }
 function carregarTarefas() { tarefas = JSON.parse(localStorage.getItem('tarefas')||'[]'); }
 function renderPreviewChecklist() {
@@ -322,10 +322,10 @@ document.getElementById('tarefaForm').onsubmit = function(e) {
   }
   salvarTarefas(); renderTarefas(); this.reset(); document.getElementById('preview-checklist').classList.add('hidden');
 };
+
 function renderTarefas() {
   let tbody = document.getElementById('tabelaTarefas').getElementsByTagName('tbody')[0];
   tbody.innerHTML = '';
-  // Filtros
   let fc = document.getElementById('filtroCliente').value;
   let ft = document.getElementById('filtroTecnico').value;
   let ftip = document.getElementById('filtroTipo').value;
@@ -337,29 +337,25 @@ function renderTarefas() {
     if(ftip && tar.tipo!==ftip) return;
     if(fs && ((fs==='pendente' && tar.status!=='pendente')||(fs==='concluida'&&tar.status!=='concluida'))) return;
     if(fd && tar.data!==fd) return;
+    // Tarefa row
     let row = tbody.insertRow();
     if(tar.status==="concluida") row.classList.add('done');
-    row.insertCell(0).innerText = tar.titulo;
-    row.insertCell(1).innerText = tar.cliente;
-    row.insertCell(2).innerText = tar.tecnico;
-    row.insertCell(3).innerText = tar.tipo;
-    row.insertCell(4).innerText = tar.data;
-    row.insertCell(5).innerText = tar.status==="concluida"?"Concluída":"Pendente";
-    // Checklist
-    let cellChecklist = row.insertCell(6);
-    let clist = document.createElement('div');
-    tar.checklist.forEach((item, idx) => {
-      let chk = document.createElement('input'); chk.type = "checkbox"; chk.checked = item.feito; chk.onchange = function() {
-        tar.checklist[idx].feito = this.checked;
-        // se todos marcados, status concluida
-        tar.status = tar.checklist.every(x=>x.feito) ? "concluida" : "pendente";
-        salvarTarefas(); renderTarefas();
-      };
-      clist.appendChild(chk);
-      clist.appendChild(document.createTextNode(" "+item.texto));
-      clist.appendChild(document.createElement('br'));
-    });
-    cellChecklist.appendChild(clist);
+    // Expand/Collapse
+    let expandCell = row.insertCell(0);
+    let expandBtn = document.createElement('button');
+    expandBtn.type = "button";
+    expandBtn.className = "expand-btn";
+    expandBtn.innerText = expandedTarefas[i] ? "−" : "+";
+    expandBtn.title = expandedTarefas[i] ? "Recolher checklist" : "Expandir checklist";
+    expandBtn.onclick = function() { expandedTarefas[i] = !expandedTarefas[i]; renderTarefas(); };
+    expandCell.appendChild(expandBtn);
+
+    row.insertCell(1).innerText = tar.titulo;
+    row.insertCell(2).innerText = tar.cliente;
+    row.insertCell(3).innerText = tar.tecnico;
+    row.insertCell(4).innerText = tar.tipo;
+    row.insertCell(5).innerText = tar.data;
+    row.insertCell(6).innerText = tar.status==="concluida"?"Concluída":"Pendente";
     // Ações
     let acoes = row.insertCell(7);
     let concluir = document.createElement('button');
@@ -371,8 +367,34 @@ function renderTarefas() {
     editar.onclick = () => editarTarefa(i);
     let excluir = document.createElement('button');
     excluir.innerText = "🗑️";
-    excluir.onclick = () => { tarefas.splice(i,1); salvarTarefas(); renderTarefas(); };
+    excluir.onclick = () => { tarefas.splice(i,1); delete expandedTarefas[i]; salvarTarefas(); renderTarefas(); };
     acoes.appendChild(concluir); acoes.appendChild(editar); acoes.appendChild(excluir);
+
+    // Checklist row (expandido)
+    if(expandedTarefas[i]) {
+      let clrow = tbody.insertRow();
+      clrow.className = "checklist-row";
+      let cell = clrow.insertCell(0);
+      cell.colSpan = 8;
+      let ul = document.createElement('ul');
+      ul.className = "checklist-list";
+      tar.checklist.forEach((item, idx) => {
+        let li = document.createElement('li');
+        let chk = document.createElement('input');
+        chk.type = "checkbox";
+        chk.className = "checklist-checkbox";
+        chk.checked = item.feito;
+        chk.onchange = function() {
+          tar.checklist[idx].feito = this.checked;
+          tar.status = tar.checklist.every(x=>x.feito) ? "concluida" : "pendente";
+          salvarTarefas(); renderTarefas();
+        };
+        li.appendChild(chk);
+        li.appendChild(document.createTextNode(item.texto));
+        ul.appendChild(li);
+      });
+      cell.appendChild(ul);
+    }
   });
 }
 function editarTarefa(i) {
@@ -388,7 +410,6 @@ function editarTarefa(i) {
   form.querySelector('button').innerText = "Salvar Alteração";
 }
 
-// SELECTS
 function atualizarSelects() {
   function setOptions(sel, arr, valFn, textFn) {
     let v = sel.value;
@@ -414,7 +435,6 @@ function atualizarSelects() {
   fTipo.value = vTipo;
 }
 
-// EXPORTAÇÃO/IMPORTAÇÃO
 function exportarJSON() {
   let dados = {clientes,tecnicos,tiposDeTarefa,tarefas};
   let blob = new Blob([JSON.stringify(dados,null,2)], {type:'application/json'});
@@ -439,7 +459,6 @@ function importarJSON(input) {
   reader.readAsText(input.files[0]);
 }
 
-// PDF - corrigido para garantir que seção está aberta antes de exportar
 function exportarTarefasPDF() {
   mostrarSecao('tarefas');
   setTimeout(() => {
@@ -455,7 +474,6 @@ function exportarTarefasPDF() {
   }, 300);
 }
 
-// FILTROS
 function limparFiltros() {
   document.getElementById('filtroCliente').value = "";
   document.getElementById('filtroTecnico').value = "";
@@ -465,7 +483,6 @@ function limparFiltros() {
   renderTarefas();
 }
 
-// NAVEGAÇÃO/INICIALIZAÇÃO
 function mostrarSecao(secao) {
   document.querySelectorAll('.section').forEach(div => div.classList.add('hidden'));
   if(secao==='menu') return;
