@@ -439,17 +439,20 @@ function importarJSON(input) {
   reader.readAsText(input.files[0]);
 }
 
-// PDF
+// PDF - corrigido para garantir que seção está aberta antes de exportar
 function exportarTarefasPDF() {
-  let el = document.getElementById('tarefasContainer');
-  let opt = {
-    margin:       0.5,
-    filename:     'relatorio_tarefas.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2 },
-    jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
-  };
-  html2pdf().set(opt).from(el).save();
+  mostrarSecao('tarefas');
+  setTimeout(() => {
+    let el = document.getElementById('tarefasContainer');
+    let opt = {
+      margin: 0.5,
+      filename: 'relatorio_tarefas.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+    };
+    html2pdf().set(opt).from(el).save();
+  }, 300);
 }
 
 // FILTROS
