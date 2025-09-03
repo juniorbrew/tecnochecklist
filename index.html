@@ -292,6 +292,60 @@
       .checklist-row .checklist-expand-cell { padding: 9px 0 9px 17px !important; }
       .checklist-list li { font-size: 0.96rem; gap: 12px; padding: 8px 7px 8px 6px; }
     }
+    /* PDF ONLY */
+    @media print {
+      .page-break { page-break-after: always; }
+    }
+    .pdf-tarefa-detalhe {
+      padding: 24px 26px 18px 26px;
+      border-radius: 18px;
+      background: #fafdff;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 24px #0001;
+      border: 2px solid #e1e4ea;
+    }
+    .pdf-tarefa-detalhe h3 {
+      margin-top: 0;
+      color: #0a84ff;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .pdf-tarefa-detalhe .pdf-info {
+      color: #444;
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+    }
+    .pdf-tarefa-detalhe .pdf-status {
+      font-weight: bold;
+      color: #fff;
+      display: inline-block;
+      padding: 4px 16px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      margin-top: 4px;
+      font-size: 1.06rem;
+      background: #18c98c;
+    }
+    .pdf-tarefa-detalhe .pdf-status.pendente {
+      background: #ff9400;
+    }
+    .pdf-tarefa-detalhe ul {
+      padding-left: 20px;
+      margin-top: 7px;
+      margin-bottom: 10px;
+    }
+    .pdf-tarefa-detalhe li {
+      margin-bottom: 5px;
+      font-size: 1.05rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pdf-tarefa-detalhe .pdf-item-ok { color: #18c98c; font-size: 1.18em; }
+    .pdf-tarefa-detalhe .pdf-item-nok { color: #bbb; font-size: 1.13em; }
+    .pdf-tarefa-detalhe .pdf-checklist-title { font-weight: 700; margin-bottom: 2px; color: #232f3e;}
   </style>
 </head>
 <body>
@@ -429,7 +483,7 @@
         <tbody></tbody>
       </table>
     </div>
-    <div id="pdfArea" class="hidden"></div>
+    <div id="pdfArea" style="display:none"></div>
   </div>
 
 <script>
@@ -437,7 +491,7 @@ let clientes = [], tecnicos = [], tiposDeTarefa = {}, tarefas = [];
 let expandedTarefa = {};
 let tarefasSelecionadas = [];
 
-// CLIENTES
+// CLIENTES ... igual a antes
 function salvarClientes() { localStorage.setItem('clientes', JSON.stringify(clientes)); }
 function carregarClientes() { clientes = JSON.parse(localStorage.getItem('clientes')||'[]'); }
 function renderClientes() {
@@ -489,8 +543,7 @@ document.getElementById('clienteForm').onsubmit = function(e) {
   }
   salvarClientes(); renderClientes(); this.reset();
 };
-
-// TÉCNICOS
+// TÉCNICOS ... igual a antes
 function salvarTecnicos() { localStorage.setItem('tecnicos', JSON.stringify(tecnicos)); }
 function carregarTecnicos() { tecnicos = JSON.parse(localStorage.getItem('tecnicos')||'[]'); }
 function renderTecnicos() {
@@ -542,8 +595,7 @@ document.getElementById('tecnicoForm').onsubmit = function(e) {
   }
   salvarTecnicos(); renderTecnicos(); this.reset();
 };
-
-// TIPOS
+// TIPOS ... igual a antes
 function salvarTipos() { localStorage.setItem('tiposDeTarefa', JSON.stringify(tiposDeTarefa)); }
 function carregarTipos() { tiposDeTarefa = JSON.parse(localStorage.getItem('tiposDeTarefa')||'{}'); }
 function renderTipos() {
@@ -582,8 +634,7 @@ document.getElementById('tipoForm').onsubmit = function(e) {
   this.editando = undefined;
   this.querySelector('button').innerText = "Adicionar Tipo";
 };
-
-// TAREFAS
+// TAREFAS CRUD
 function salvarTarefas() { localStorage.setItem('tarefas', JSON.stringify(tarefas)); }
 function carregarTarefas() { tarefas = JSON.parse(localStorage.getItem('tarefas')||'[]'); }
 function renderPreviewChecklist() {
@@ -613,7 +664,6 @@ document.getElementById('tarefaForm').onsubmit = function(e) {
   }
   salvarTarefas(); renderTarefas(); this.reset(); document.getElementById('preview-checklist').classList.add('hidden');
 };
-
 // Renderização de tarefas com seleção
 function renderTarefas() {
   let tbody = document.getElementById('tabelaTarefas').getElementsByTagName('tbody')[0];
@@ -708,7 +758,6 @@ function renderTarefas() {
     }
   });
 }
-
 // Selecionar/deselecionar todas
 function selecionarTodasTarefas() {
   tarefasSelecionadas = [];
@@ -732,55 +781,71 @@ function desselecionarTodasTarefas() {
   renderTarefas();
 }
 
-// Exportação PDF Sintético/Detalhado (Somente tarefas selecionadas)
+// PDF exportação organizada (visual moderno, quebra entre tarefas detalhadas)
 function exportarTarefasPDFSelecionadas(tipo='sintetico') {
   if(tarefasSelecionadas.length===0) {
     alert("Selecione pelo menos uma tarefa para exportar!");
     return;
   }
-  // Montar HTML sintético ou detalhado
-  let html = `<h2 style="color:#0a84ff;font-family:Segoe UI,sans-serif;margin-bottom:16px;">Relatório de Tarefas ${tipo==='detalhado'?'(Detalhado)':'(Sintético)'}</h2>`;
-  html += `<p style="font-family:Segoe UI,sans-serif;font-size:1.08rem;margin-bottom:14px;"><b>Data de emissão:</b> ${new Date().toLocaleString()}</p>`;
-  html += `<table style="width:100%;font-family:Segoe UI,Roboto,Arial,sans-serif;border-collapse:collapse;font-size:1.01rem;margin-bottom:28px;">`;
-  html += `<thead><tr>`;
-  html += `<th style="background:#232f3e;color:#fff;padding:9px 6px;">Título</th>`;
-  html += `<th style="background:#232f3e;color:#fff;padding:9px 6px;">Cliente</th>`;
-  html += `<th style="background:#232f3e;color:#fff;padding:9px 6px;">Técnico</th>`;
-  html += `<th style="background:#232f3e;color:#fff;padding:9px 6px;">Tipo</th>`;
-  html += `<th style="background:#232f3e;color:#fff;padding:9px 6px;">Data</th>`;
-  html += `<th style="background:#232f3e;color:#fff;padding:9px 6px;">Status</th>`;
-  if(tipo==='detalhado') html += `<th style="background:#232f3e;color:#fff;padding:9px 6px;">Checklist</th>`;
-  html += `</tr></thead><tbody>`;
-  tarefasSelecionadas.forEach(idx=>{
-    let t = tarefas[idx];
-    if(!t) return;
-    html += `<tr>`;
-    html += `<td style="padding:7px 6px;">${t.titulo||''}</td>`;
-    html += `<td style="padding:7px 6px;">${t.cliente||''}</td>`;
-    html += `<td style="padding:7px 6px;">${t.tecnico||''}</td>`;
-    html += `<td style="padding:7px 6px;">${t.tipo||''}</td>`;
-    html += `<td style="padding:7px 6px;">${t.data||''}</td>`;
-    html += `<td style="padding:7px 6px;font-weight:bold;color:${t.status==='concluida'?'#18c98c':'#ff9400'}">${t.status==='concluida'?'Executada':'Pendente'}</td>`;
-    if(tipo==='detalhado') {
-      html += `<td style="padding:7px 6px;">`;
-      html += `<ul style="margin:0;padding:0;">`;
+  let area = document.getElementById('pdfArea');
+  let dataEmissao = new Date().toLocaleString();
+  let tituloRel = `Relatório de Tarefas ${tipo==='detalhado'?'(Detalhado)':'(Sintético)'}`;
+  // PDF Sintético: tabela única
+  if (tipo === 'sintetico') {
+    let html = `<div style="font-family:Segoe UI,Roboto,Arial,sans-serif;padding:18px;"><h2 style="color:#0a84ff">${tituloRel}</h2><p><b>Data de emissão:</b> ${dataEmissao}</p>`;
+    html += `<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:1.04rem;">
+      <thead>
+        <tr>
+          <th style="background:#232f3e;color:#fff;padding:9px 6px;">Título</th>
+          <th style="background:#232f3e;color:#fff;padding:9px 6px;">Cliente</th>
+          <th style="background:#232f3e;color:#fff;padding:9px 6px;">Técnico</th>
+          <th style="background:#232f3e;color:#fff;padding:9px 6px;">Tipo</th>
+          <th style="background:#232f3e;color:#fff;padding:9px 6px;">Data</th>
+          <th style="background:#232f3e;color:#fff;padding:9px 6px;">Status</th>
+        </tr>
+      </thead>
+      <tbody>`;
+    tarefasSelecionadas.forEach(idx=>{
+      let t = tarefas[idx];
+      if(!t) return;
+      html += `<tr>
+        <td style="padding:7px 6px;">${t.titulo||''}</td>
+        <td style="padding:7px 6px;">${t.cliente||''}</td>
+        <td style="padding:7px 6px;">${t.tecnico||''}</td>
+        <td style="padding:7px 6px;">${t.tipo||''}</td>
+        <td style="padding:7px 6px;">${t.data||''}</td>
+        <td style="padding:7px 6px;font-weight:bold;color:${t.status==='concluida'?'#18c98c':'#ff9400'}">${t.status==='concluida'?'Executada':'Pendente'}</td>
+      </tr>`;
+    });
+    html += `</tbody></table><p style="font-size:0.98rem;color:#666;">Relatório gerado automaticamente pelo sistema.</p></div>`;
+    area.innerHTML = html;
+  } else {
+    // Detalhado: cada tarefa em um cartão, com quebra de página
+    let html = `<div style="font-family:Segoe UI,Roboto,Arial,sans-serif;padding:18px;"><h2 style="color:#0a84ff">${tituloRel}</h2><p><b>Data de emissão:</b> ${dataEmissao}</p>`;
+    tarefasSelecionadas.forEach((idx, n)=>{
+      let t = tarefas[idx];
+      if(!t) return;
+      html += `<div class="pdf-tarefa-detalhe${n>0?' page-break':''}">
+        <h3>${t.titulo||''}</h3>
+        <div class="pdf-info"><b>Cliente:</b> ${t.cliente||''}</div>
+        <div class="pdf-info"><b>Técnico:</b> ${t.tecnico||''}</div>
+        <div class="pdf-info"><b>Tipo:</b> ${t.tipo||''}</div>
+        <div class="pdf-info"><b>Data:</b> ${t.data||''}</div>
+        <div class="pdf-status${t.status!=='concluida'?' pendente':''}">${t.status==='concluida'?'Executada':'Pendente'}</div>
+        <div class="pdf-checklist-title">Checklist:</div>
+        <ul>`;
       (t.checklist||[]).forEach(item=>{
-        html += `<li style="list-style:none;margin-bottom:5px;display:flex;align-items:center;gap:8px;font-weight:600;">
-          <span style="display:inline-block;width:16px;text-align:center;">
-            ${item.feito?'<span style="color:#18c98c;font-size:18px;">&#10003;</span>':'<span style="color:#bbb;font-size:15px;">&#9633;</span>'}
-          </span>
+        html += `<li>
+          <span class="${item.feito?'pdf-item-ok':'pdf-item-nok'}">${item.feito?'&#10003;':'&#9633;'}</span>
           <span style="${item.feito?'color:#18c98c;':'color:#232f3e;'}">${item.texto||''}</span>
         </li>`;
       });
-      html += `</ul></td>`;
-    }
-    html += `</tr>`;
-  });
-  html += `</tbody></table>`;
-  html += `<p style="font-size:0.98rem;color:#666;font-family:Segoe UI,sans-serif;">Relatório gerado automaticamente pelo sistema.</p>`;
-  let area = document.getElementById('pdfArea');
-  area.innerHTML = html;
-  area.classList.remove('hidden');
+      html += `</ul></div>`;
+    });
+    html += `<p style="font-size:0.98rem;color:#666;margin-top:20px;">Relatório gerado automaticamente pelo sistema.</p></div>`;
+    area.innerHTML = html;
+  }
+  area.style.display = "block";
   setTimeout(()=>{
     html2pdf().set({
       margin: 0.6,
@@ -788,8 +853,8 @@ function exportarTarefasPDFSelecionadas(tipo='sintetico') {
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-    }).from(area).save().then(()=>{area.classList.add('hidden');});
-  },300);
+    }).from(area).save().then(()=>{area.style.display="none";});
+  }, 400);
 }
 
 // editar tarefa
@@ -805,7 +870,6 @@ function editarTarefa(i) {
   form.editando = i;
   form.querySelector('button').innerText = "Salvar Alteração";
 }
-
 // SELECTS
 function atualizarSelects() {
   function setOptions(sel, arr, valFn, textFn) {
@@ -831,7 +895,6 @@ function atualizarSelects() {
   tipoArr.forEach(t=>fTipo.add(new Option(t,t)));
   fTipo.value = vTipo;
 }
-
 // EXPORTAÇÃO/IMPORTAÇÃO/FILTROS/NAVEGAÇÃO
 function exportarJSON() {
   let dados = {clientes,tecnicos,tiposDeTarefa,tarefas};
