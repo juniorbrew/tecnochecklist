@@ -1,3 +1,0 @@
-# Configuração mínima para Netlify
-[build]
-  publish = "."
