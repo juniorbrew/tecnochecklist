@@ -21,7 +21,6 @@ Thumbs.db
 temp/
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
