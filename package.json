@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dev": "echo 'Use Live Server no VS Code para desenvolvimento web'",
+    "serve": "echo 'Instale Node.js e execute: node servidor.js'"
   },
   "devDependencies": {
     "electron": "^28.1.0"
-  }
+  },
+  "description": "Tecno-Checklist - Aplicação de checklist técnico",
+  "keywords": ["checklist", "tecnico", "web", "app"],
+  "author": "Tecno-Checklist Team"
 }
