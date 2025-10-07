@@ -1,18 +1,15 @@
-// API para comunicação com Supabase
+// API para comunicação com Supabase via Netlify Functions
 class TecnoChecklistAPI {
     constructor() {
-        this.supabaseUrl = SUPABASE_CONFIG.url;
-        this.supabaseKey = SUPABASE_CONFIG.anonKey;
+        this.baseUrl = window.location.origin;
         this.headers = {
-            'Content-Type': 'application/json',
-            'apikey': this.supabaseKey,
-            'Authorization': `Bearer ${this.supabaseKey}`
+            'Content-Type': 'application/json'
         };
     }
 
-    // Método genérico para fazer requisições
-    async request(endpoint, options = {}) {
-        const url = `${this.supabaseUrl}/rest/v1/${endpoint}`;
+    // Método genérico para fazer requisições às funções serverless
+    async request(functionName, options = {}) {
+        const url = `${this.baseUrl}/.netlify/functions/${functionName}`;
         const config = {
             headers: this.headers,
             ...options
@@ -32,138 +29,378 @@ class TecnoChecklistAPI {
 
     // USUÁRIOS
     async getUsuarios() {
-        return await this.request('usuarios?select=*');
+        const response = await this.request('getData?tabela=usuarios');
+        return response.data || [];
     }
 
     async createUsuario(usuario) {
-        return await this.request('usuarios', {
+        const response = await this.request('saveData', {
             method: 'POST',
-            body: JSON.stringify(usuario)
+            body: JSON.stringify({
+                tabela: 'usuarios',
+                dados: usuario
+            })
         });
+        return response.data;
     }
 
     async updateUsuario(id, usuario) {
-        return await this.request(`usuarios?id=eq.${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(usuario)
+        const response = await this.request('updateData', {
+            method: 'PUT',
+            body: JSON.stringify({
+                tabela: 'usuarios',
+                id: id,
+                dados: usuario
+            })
         });
+        return response.data;
     }
 
     async deleteUsuario(id) {
-        return await this.request(`usuarios?id=eq.${id}`, {
+        const response = await this.request(`deleteData?tabela=usuarios&id=${id}`, {
             method: 'DELETE'
         });
+        return response.data;
     }
 
     async loginUsuario(usuario, senha) {
-        const usuarios = await this.request(`usuarios?usuario=eq.${usuario}&senha=eq.${senha}&ativo=eq.true`);
+        const response = await this.request(`getData?tabela=usuarios&filtros=${encodeURIComponent(JSON.stringify({usuario: usuario, senha: senha, ativo: true}))}`);
+        const usuarios = response.data || [];
         return usuarios.length > 0 ? usuarios[0] : null;
     }
 
     // CLIENTES
     async getClientes() {
-        return await this.request('clientes?select=*&order=created_at.desc');
+        const response = await this.request('getData?tabela=clientes&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
+        return response.data || [];
     }
 
     async createCliente(cliente) {
-        return await this.request('clientes', {
+        const response = await this.request('saveData', {
             method: 'POST',
-            body: JSON.stringify(cliente)
+            body: JSON.stringify({
+                tabela: 'clientes',
+                dados: cliente
+            })
         });
+        return response.data;
     }
 
     async updateCliente(id, cliente) {
-        return await this.request(`clientes?id=eq.${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(cliente)
+        const response = await this.request('updateData', {
+            method: 'PUT',
+            body: JSON.stringify({
+                tabela: 'clientes',
+                id: id,
+                dados: cliente
+            })
         });
+        return response.data;
     }
 
     async deleteCliente(id) {
-        return await this.request(`clientes?id=eq.${id}`, {
+        const response = await this.request(`deleteData?tabela=clientes&id=${id}`, {
             method: 'DELETE'
         });
+        return response.data;
     }
 
     // TÉCNICOS
     async getTecnicos() {
-        return await this.request('tecnicos?select=*&order=created_at.desc');
+        const response = await this.request('getData?tabela=tecnicos&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
+        return response.data || [];
     }
 
     async createTecnico(tecnico) {
-        return await this.request('tecnicos', {
+        const response = await this.request('saveData', {
             method: 'POST',
-            body: JSON.stringify(tecnico)
+            body: JSON.stringify({
+                tabela: 'tecnicos',
+                dados: tecnico
+            })
         });
+        return response.data;
     }
 
     async updateTecnico(id, tecnico) {
-        return await this.request(`tecnicos?id=eq.${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(tecnico)
+        const response = await this.request('updateData', {
+            method: 'PUT',
+            body: JSON.stringify({
+                tabela: 'tecnicos',
+                id: id,
+                dados: tecnico
+            })
         });
+        return response.data;
     }
 
     async deleteTecnico(id) {
-        return await this.request(`tecnicos?id=eq.${id}`, {
+        const response = await this.request(`deleteData?tabela=tecnicos&id=${id}`, {
             method: 'DELETE'
         });
+        return response.data;
     }
 
     // TIPOS DE TAREFA
     async getTiposTarefa() {
-        return await this.request('tipos_tarefa?select=*&order=created_at.desc');
+        const response = await this.request('getData?tabela=tipos_tarefa&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
+        return response.data || [];
     }
 
     async createTipoTarefa(tipo) {
-        return await this.request('tipos_tarefa', {
+        const response = await this.request('saveData', {
             method: 'POST',
-            body: JSON.stringify(tipo)
+            body: JSON.stringify({
+                tabela: 'tipos_tarefa',
+                dados: tipo
+            })
         });
+        return response.data;
     }
 
     async updateTipoTarefa(id, tipo) {
-        return await this.request(`tipos_tarefa?id=eq.${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(tipo)
+        const response = await this.request('updateData', {
+            method: 'PUT',
+            body: JSON.stringify({
+                tabela: 'tipos_tarefa',
+                id: id,
+                dados: tipo
+            })
         });
+        return response.data;
     }
 
     async deleteTipoTarefa(id) {
-        return await this.request(`tipos_tarefa?id=eq.${id}`, {
+        const response = await this.request(`deleteData?tabela=tipos_tarefa&id=${id}`, {
             method: 'DELETE'
         });
+        return response.data;
     }
 
     // TAREFAS
     async getTarefas() {
-        return await this.request(`
-            tarefas?select=*,
-            clientes(razao_social),
-            tecnicos(nome),
-            tipos_tarefa(tipo)
-            &order=created_at.desc
-        `);
+        const response = await this.request('getData?tabela=tarefas&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
+        return response.data || [];
     }
 
     async createTarefa(tarefa) {
-        return await this.request('tarefas', {
+        const response = await this.request('saveData', {
             method: 'POST',
-            body: JSON.stringify(tarefa)
+            body: JSON.stringify({
+                tabela: 'tarefas',
+                dados: tarefa
+            })
         });
+        return response.data;
     }
 
     async updateTarefa(id, tarefa) {
-        return await this.request(`tarefas?id=eq.${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(tarefa)
+        const response = await this.request('updateData', {
+            method: 'PUT',
+            body: JSON.stringify({
+                tabela: 'tarefas',
+                id: id,
+                dados: tarefa
+            })
         });
+        return response.data;
     }
 
     async deleteTarefa(id) {
-        return await this.request(`tarefas?id=eq.${id}`, {
+        const response = await this.request(`deleteData?tabela=tarefas&id=${id}`, {
             method: 'DELETE'
         });
+        return response.data;
+    }
+
+    // ===========================================
+    // MÉTODOS DO CRM
+    // ===========================================
+
+    // PRODUTOS
+    async getProdutos() {
+        const response = await this.request('getData?tabela=produtos&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
+        return response.data || [];
+    }
+
+    async createProduto(produto) {
+        const response = await this.request('saveData', {
+            method: 'POST',
+            body: JSON.stringify({
+                tabela: 'produtos',
+                dados: produto
+            })
+        });
+        return response.data;
+    }
+
+    async updateProduto(id, produto) {
+        const response = await this.request('updateData', {
+            method: 'PUT',
+            body: JSON.stringify({
+                tabela: 'produtos',
+                id: id,
+                dados: produto
+            })
+        });
+        return response.data;
+    }
+
+    async deleteProduto(id) {
+        const response = await this.request(`deleteData?tabela=produtos&id=${id}`, {
+            method: 'DELETE'
+        });
+        return response.data;
+    }
+
+    // OPORTUNIDADES
+    async getOportunidades() {
+        const response = await this.request('getData?tabela=oportunidades&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
+        return response.data || [];
+    }
+
+    async createOportunidade(oportunidade) {
+        const response = await this.request('saveData', {
+            method: 'POST',
+            body: JSON.stringify({
+                tabela: 'oportunidades',
+                dados: oportunidade
+            })
+        });
+        return response.data;
+    }
+
+    async updateOportunidade(id, oportunidade) {
+        const response = await this.request('updateData', {
+            method: 'PUT',
+            body: JSON.stringify({
+                tabela: 'oportunidades',
+                id: id,
+                dados: oportunidade
+            })
+        });
+        return response.data;
+    }
+
+    async deleteOportunidade(id) {
+        const response = await this.request(`deleteData?tabela=oportunidades&id=${id}`, {
+            method: 'DELETE'
+        });
+        return response.data;
+    }
+
+    // ATIVIDADES
+    async getAtividades() {
+        const response = await this.request('getData?tabela=atividades&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'data_agendada', ascending: true})));
+        return response.data || [];
+    }
+
+    async createAtividade(atividade) {
+        const response = await this.request('saveData', {
+            method: 'POST',
+            body: JSON.stringify({
+                tabela: 'atividades',
+                dados: atividade
+            })
+        });
+        return response.data;
+    }
+
+    async updateAtividade(id, atividade) {
+        const response = await this.request('updateData', {
+            method: 'PUT',
+            body: JSON.stringify({
+                tabela: 'atividades',
+                id: id,
+                dados: atividade
+            })
+        });
+        return response.data;
+    }
+
+    async deleteAtividade(id) {
+        const response = await this.request(`deleteData?tabela=atividades&id=${id}`, {
+            method: 'DELETE'
+        });
+        return response.data;
+    }
+
+    // OPORTUNIDADE ITENS
+    async getOportunidadeItens(oportunidadeId) {
+        const response = await this.request(`getData?tabela=oportunidade_itens&filtros=${encodeURIComponent(JSON.stringify({oportunidade_id: oportunidadeId}))}`);
+        return response.data || [];
+    }
+
+    async createOportunidadeItem(item) {
+        const response = await this.request('saveData', {
+            method: 'POST',
+            body: JSON.stringify({
+                tabela: 'oportunidade_itens',
+                dados: item
+            })
+        });
+        return response.data;
+    }
+
+    async updateOportunidadeItem(id, item) {
+        const response = await this.request('updateData', {
+            method: 'PUT',
+            body: JSON.stringify({
+                tabela: 'oportunidade_itens',
+                id: id,
+                dados: item
+            })
+        });
+        return response.data;
+    }
+
+    async deleteOportunidadeItem(id) {
+        const response = await this.request(`deleteData?tabela=oportunidade_itens&id=${id}`, {
+            method: 'DELETE'
+        });
+        return response.data;
+    }
+
+    // MÉTODOS DE RELATÓRIOS E DASHBOARD
+    async getDashboardData() {
+        try {
+            const [clientes, oportunidades, atividades] = await Promise.all([
+                this.getClientes(),
+                this.getOportunidades(),
+                this.getAtividades()
+            ]);
+
+            const totalClientes = clientes.length;
+            const clientesAtivos = clientes.filter(c => c.status === 'ativo').length;
+            const oportunidadesAbertas = oportunidades.filter(o => !['fechada', 'perdida'].includes(o.status)).length;
+            const valorTotalOportunidades = oportunidades
+                .filter(o => !['fechada', 'perdida'].includes(o.status))
+                .reduce((total, o) => total + (parseFloat(o.valor) || 0), 0);
+            const atividadesPendentes = atividades.filter(a => a.status === 'pendente').length;
+
+            return {
+                totalClientes,
+                clientesAtivos,
+                oportunidadesAbertas,
+                valorTotalOportunidades,
+                atividadesPendentes,
+                clientes,
+                oportunidades,
+                atividades
+            };
+        } catch (error) {
+            console.error('Erro ao buscar dados do dashboard:', error);
+            return {
+                totalClientes: 0,
+                clientesAtivos: 0,
+                oportunidadesAbertas: 0,
+                valorTotalOportunidades: 0,
+                atividadesPendentes: 0,
+                clientes: [],
+                oportunidades: [],
+                atividades: []
+            };
+        }
     }
 }
 

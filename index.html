@@ -3701,19 +3701,29 @@
             }
         }
 
-        function deleteCliente(id) {
+        async function deleteCliente(id) {
             const cliente = clientes.find(c => c.id === id);
             if (!cliente) return;
             
             showConfirmModal(
                 'Excluir Cliente',
                 `Tem certeza que deseja excluir o cliente <strong>"${cliente.nome}"</strong>?<br><br>Esta ação não pode ser desfeita.`,
-                () => {
-                    clientes = clientes.filter(c => c.id !== id);
-                    saveData();
-                    renderClientes();
-                    updateSelects();
-                    showNotification('✅ Cliente excluído com sucesso!', 'success');
+                async () => {
+                    try {
+                        // Deletar do Supabase
+                        await fetch(`/.netlify/functions/deleteData?tabela=clientes&id=${id}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        // Remover da lista local
+                        clientes = clientes.filter(c => c.id !== id);
+                        renderClientes();
+                        updateSelects();
+                        showNotification('✅ Cliente excluído com sucesso!', 'success');
+                    } catch (error) {
+                        console.error('Erro ao deletar cliente:', error);
+                        showNotification('❌ Erro ao excluir cliente!', 'error');
+                    }
                 }
             );
         }
@@ -3792,19 +3802,29 @@
             }
         }
 
-        function deleteTecnico(id) {
+        async function deleteTecnico(id) {
             const tecnico = tecnicos.find(t => t.id === id);
             if (!tecnico) return;
             
             showConfirmModal(
                 'Excluir Técnico',
                 `Tem certeza que deseja excluir o técnico <strong>"${tecnico.nome}"</strong>?<br><br>Esta ação não pode ser desfeita.`,
-                () => {
-                    tecnicos = tecnicos.filter(t => t.id !== id);
-                    saveData();
-                    renderTecnicos();
-                    updateSelects();
-                    showNotification('✅ Técnico excluído com sucesso!', 'success');
+                async () => {
+                    try {
+                        // Deletar do Supabase
+                        await fetch(`/.netlify/functions/deleteData?tabela=tecnicos&id=${id}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        // Remover da lista local
+                        tecnicos = tecnicos.filter(t => t.id !== id);
+                        renderTecnicos();
+                        updateSelects();
+                        showNotification('✅ Técnico excluído com sucesso!', 'success');
+                    } catch (error) {
+                        console.error('Erro ao deletar técnico:', error);
+                        showNotification('❌ Erro ao excluir técnico!', 'error');
+                    }
                 }
             );
         }
@@ -3876,16 +3896,29 @@
             }
         }
 
-        function deleteTipo(nome) {
+        async function deleteTipo(nome) {
+            const tipo = tipos.find(t => t.nome === nome);
+            if (!tipo) return;
+            
             showConfirmModal(
                 'Excluir Tipo de Serviço',
                 `Tem certeza que deseja excluir o tipo <strong>"${nome}"</strong>?<br><br>Esta ação não pode ser desfeita.`,
-                () => {
-                    tipos = tipos.filter(t => t.nome !== nome);
-                    saveData();
-                    renderTipos();
-                    updateSelects();
-                    showNotification('✅ Tipo excluído com sucesso!', 'success');
+                async () => {
+                    try {
+                        // Deletar do Supabase
+                        await fetch(`/.netlify/functions/deleteData?tabela=tipos_tarefa&id=${tipo.id}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        // Remover da lista local
+                        tipos = tipos.filter(t => t.nome !== nome);
+                        renderTipos();
+                        updateSelects();
+                        showNotification('✅ Tipo excluído com sucesso!', 'success');
+                    } catch (error) {
+                        console.error('Erro ao deletar tipo:', error);
+                        showNotification('❌ Erro ao excluir tipo!', 'error');
+                    }
                 }
             );
         }
@@ -4072,18 +4105,28 @@
             }
         }
 
-        function deleteTarefa(id) {
+        async function deleteTarefa(id) {
             const tarefa = tarefas.find(t => t.id === id);
             if (!tarefa) return;
             
             showConfirmModal(
                 'Excluir Tarefa',
                 `Tem certeza que deseja excluir a tarefa <strong>"${tarefa.titulo}"</strong>?<br><br>Esta ação não pode ser desfeita.`,
-                () => {
-                    tarefas = tarefas.filter(t => t.id !== id);
-                    saveData();
-                    renderTarefas();
-                    showNotification('✅ Tarefa excluída com sucesso!', 'success');
+                async () => {
+                    try {
+                        // Deletar do Supabase
+                        await fetch(`/.netlify/functions/deleteData?tabela=tarefas&id=${id}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        // Remover da lista local
+                        tarefas = tarefas.filter(t => t.id !== id);
+                        renderTarefas();
+                        showNotification('✅ Tarefa excluída com sucesso!', 'success');
+                    } catch (error) {
+                        console.error('Erro ao deletar tarefa:', error);
+                        showNotification('❌ Erro ao excluir tarefa!', 'error');
+                    }
                 }
             );
         }
@@ -5969,36 +6012,188 @@
             e.target.value = value;
         }
 
-        function loadData() {
+        async function loadData() {
             try {
-                const data = localStorage.getItem('tecno-checklist-data');
-                if (data) {
-                    const parsed = JSON.parse(data);
-                    clientes = parsed.clientes || [];
-                    tecnicos = parsed.tecnicos || [];
-                    tipos = parsed.tipos || [];
-                    tarefas = parsed.tarefas || [];
-                }
+                // Carregar dados do Supabase via funções serverless
+                const [clientesData, tecnicosData, tiposData, tarefasData] = await Promise.all([
+                    fetch('/.netlify/functions/getData?tabela=clientes').then(r => r.json()),
+                    fetch('/.netlify/functions/getData?tabela=tecnicos').then(r => r.json()),
+                    fetch('/.netlify/functions/getData?tabela=tipos_tarefa').then(r => r.json()),
+                    fetch('/.netlify/functions/getData?tabela=tarefas').then(r => r.json())
+                ]);
+
+                clientes = clientesData.data || [];
+                tecnicos = tecnicosData.data || [];
+                tipos = tiposData.data || [];
+                tarefas = tarefasData.data || [];
+
+                // Atualizar interface
+                renderClientes();
+                renderTecnicos();
+                renderTipos();
+                renderTarefas();
+                updateStats();
+
+                showNotification('✅ Dados carregados do banco de dados!', 'success');
             } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                showNotification('⚠️ Erro ao carregar dados salvos. Usando dados padrão.', 'warning');
-                // Inicializar com arrays vazios em caso de erro
-                clientes = [];
-                tecnicos = [];
-                tipos = [];
-                tarefas = [];
+                console.error('Erro ao carregar dados do banco:', error);
+                showNotification('⚠️ Erro ao carregar dados do banco. Usando dados locais.', 'warning');
+                
+                // Fallback para localStorage
+                try {
+                    const data = localStorage.getItem('tecno-checklist-data');
+                    if (data) {
+                        const parsed = JSON.parse(data);
+                        clientes = parsed.clientes || [];
+                        tecnicos = parsed.tecnicos || [];
+                        tipos = parsed.tipos || [];
+                        tarefas = parsed.tarefas || [];
+                    }
+                } catch (localError) {
+                    console.error('Erro ao carregar dados locais:', localError);
+                    clientes = [];
+                    tecnicos = [];
+                    tipos = [];
+                    tarefas = [];
+                }
             }
         }
 
-        function saveData() {
+        async function saveData() {
             try {
-                const data = {
-                    clientes, tecnicos, tipos, tarefas
-                };
-                localStorage.setItem('tecno-checklist-data', JSON.stringify(data));
+                // Salvar no Supabase via funções serverless
+                const promises = [];
+                
+                // Salvar clientes
+                for (const cliente of clientes) {
+                    if (cliente.id && !cliente.id.toString().startsWith('temp_')) {
+                        // Atualizar cliente existente
+                        promises.push(
+                            fetch('/.netlify/functions/updateData', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tabela: 'clientes',
+                                    id: cliente.id,
+                                    dados: cliente
+                                })
+                            })
+                        );
+                    } else {
+                        // Criar novo cliente
+                        promises.push(
+                            fetch('/.netlify/functions/saveData', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tabela: 'clientes',
+                                    dados: cliente
+                                })
+                            })
+                        );
+                    }
+                }
+
+                // Salvar técnicos
+                for (const tecnico of tecnicos) {
+                    if (tecnico.id && !tecnico.id.toString().startsWith('temp_')) {
+                        promises.push(
+                            fetch('/.netlify/functions/updateData', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tabela: 'tecnicos',
+                                    id: tecnico.id,
+                                    dados: tecnico
+                                })
+                            })
+                        );
+                    } else {
+                        promises.push(
+                            fetch('/.netlify/functions/saveData', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tabela: 'tecnicos',
+                                    dados: tecnico
+                                })
+                            })
+                        );
+                    }
+                }
+
+                // Salvar tipos
+                for (const tipo of tipos) {
+                    if (tipo.id && !tipo.id.toString().startsWith('temp_')) {
+                        promises.push(
+                            fetch('/.netlify/functions/updateData', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tabela: 'tipos_tarefa',
+                                    id: tipo.id,
+                                    dados: tipo
+                                })
+                            })
+                        );
+                    } else {
+                        promises.push(
+                            fetch('/.netlify/functions/saveData', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tabela: 'tipos_tarefa',
+                                    dados: tipo
+                                })
+                            })
+                        );
+                    }
+                }
+
+                // Salvar tarefas
+                for (const tarefa of tarefas) {
+                    if (tarefa.id && !tarefa.id.toString().startsWith('temp_')) {
+                        promises.push(
+                            fetch('/.netlify/functions/updateData', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tabela: 'tarefas',
+                                    id: tarefa.id,
+                                    dados: tarefa
+                                })
+                            })
+                        );
+                    } else {
+                        promises.push(
+                            fetch('/.netlify/functions/saveData', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tabela: 'tarefas',
+                                    dados: tarefa
+                                })
+                            })
+                        );
+                    }
+                }
+
+                await Promise.all(promises);
+                showNotification('✅ Dados salvos no banco de dados!', 'success');
             } catch (error) {
-                console.error('Erro ao salvar dados:', error);
-                showNotification('❌ Erro ao salvar dados! Verifique o espaço disponível.', 'error');
+                console.error('Erro ao salvar dados no banco:', error);
+                showNotification('⚠️ Erro ao salvar no banco. Salvando localmente.', 'warning');
+                
+                // Fallback para localStorage
+                try {
+                    const data = {
+                        clientes, tecnicos, tipos, tarefas
+                    };
+                    localStorage.setItem('tecno-checklist-data', JSON.stringify(data));
+                } catch (localError) {
+                    console.error('Erro ao salvar dados locais:', localError);
+                    showNotification('❌ Erro ao salvar dados!', 'error');
+                }
             }
         }
 

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Integração - Tecno-Checklist</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .pending { background: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de Integração - Tecno-Checklist</h1>
+        <p>Este arquivo ajuda você a testar se a integração com Supabase e Netlify está funcionando corretamente.</p>
+        
+        <div class="test-item pending" id="test-1">
+            <h3>1. Teste de Conectividade com Supabase</h3>
+            <button onclick="testarSupabase()">Testar Conexão</button>
+            <div id="result-1" class="result"></div>
+        </div>
+
+        <div class="test-item pending" id="test-2">
+            <h3>2. Teste de Funções Serverless</h3>
+            <button onclick="testarFuncoes()">Testar Funções</button>
+            <div id="result-2" class="result"></div>
+        </div>
+
+        <div class="test-item pending" id="test-3">
+            <h3>3. Teste de Criação de Dados</h3>
+            <button onclick="testarCriacao()">Criar Dados de Teste</button>
+            <div id="result-3" class="result"></div>
+        </div>
+
+        <div class="test-item pending" id="test-4">
+            <h3>4. Teste de Busca de Dados</h3>
+            <button onclick="testarBusca()">Buscar Dados</button>
+            <div id="result-4" class="result"></div>
+        </div>
+
+        <div class="test-item pending" id="test-5">
+            <h3>5. Teste Completo da API</h3>
+            <button onclick="testarAPI()">Testar API Completa</button>
+            <div id="result-5" class="result"></div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #e9ecef; border-radius: 4px;">
+            <h3>📋 Instruções:</h3>
+            <ol>
+                <li>Certifique-se de que o Supabase está configurado</li>
+                <li>Verifique se as variáveis de ambiente estão configuradas no Netlify</li>
+                <li>Execute os testes na ordem</li>
+                <li>Se algum teste falhar, verifique as configurações</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Função para testar conectividade com Supabase
+        async function testarSupabase() {
+            const resultDiv = document.getElementById('result-1');
+            const testDiv = document.getElementById('test-1');
+            
+            try {
+                resultDiv.textContent = 'Testando conexão...';
+                
+                // Teste básico de conectividade
+                const response = await fetch('/.netlify/functions/getData?tabela=usuarios');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    testDiv.className = 'test-item success';
+                    resultDiv.textContent = `✅ Conexão OK!\nDados recebidos: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                testDiv.className = 'test-item error';
+                resultDiv.textContent = `❌ Erro: ${error.message}`;
+            }
+        }
+
+        // Função para testar funções serverless
+        async function testarFuncoes() {
+            const resultDiv = document.getElementById('result-2');
+            const testDiv = document.getElementById('test-2');
+            
+            try {
+                resultDiv.textContent = 'Testando funções...';
+                
+                const funcoes = ['getData', 'saveData', 'updateData', 'deleteData'];
+                const resultados = [];
+                
+                for (const funcao of funcoes) {
+                    try {
+                        const response = await fetch(`/.netlify/functions/${funcao}`, {
+                            method: 'GET'
+                        });
+                        resultados.push(`${funcao}: ${response.ok ? 'OK' : 'ERRO'}`);
+                    } catch (e) {
+                        resultados.push(`${funcao}: ERRO - ${e.message}`);
+                    }
+                }
+                
+                testDiv.className = 'test-item success';
+                resultDiv.textContent = `✅ Funções testadas:\n${resultados.join('\n')}`;
+            } catch (error) {
+                testDiv.className = 'test-item error';
+                resultDiv.textContent = `❌ Erro: ${error.message}`;
+            }
+        }
+
+        // Função para testar criação de dados
+        async function testarCriacao() {
+            const resultDiv = document.getElementById('result-3');
+            const testDiv = document.getElementById('test-3');
+            
+            try {
+                resultDiv.textContent = 'Criando dados de teste...';
+                
+                const dadosTeste = {
+                    tabela: 'usuarios',
+                    dados: {
+                        nome: 'Usuário Teste',
+                        usuario: 'teste@exemplo.com',
+                        senha: '123456',
+                        email: 'teste@exemplo.com',
+                        ativo: true
+                    }
+                };
+                
+                const response = await fetch('/.netlify/functions/saveData', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dadosTeste)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    testDiv.className = 'test-item success';
+                    resultDiv.textContent = `✅ Dados criados com sucesso!\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                testDiv.className = 'test-item error';
+                resultDiv.textContent = `❌ Erro: ${error.message}`;
+            }
+        }
+
+        // Função para testar busca de dados
+        async function testarBusca() {
+            const resultDiv = document.getElementById('result-4');
+            const testDiv = document.getElementById('test-4');
+            
+            try {
+                resultDiv.textContent = 'Buscando dados...';
+                
+                const response = await fetch('/.netlify/functions/getData?tabela=usuarios');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    testDiv.className = 'test-item success';
+                    resultDiv.textContent = `✅ Dados encontrados!\nTotal: ${data.count || 0} registros\n${JSON.stringify(data.data, null, 2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                testDiv.className = 'test-item error';
+                resultDiv.textContent = `❌ Erro: ${error.message}`;
+            }
+        }
+
+        // Função para testar API completa
+        async function testarAPI() {
+            const resultDiv = document.getElementById('result-5');
+            const testDiv = document.getElementById('test-5');
+            
+            try {
+                resultDiv.textContent = 'Testando API completa...';
+                
+                // Teste 1: Buscar dados
+                const getResponse = await fetch('/.netlify/functions/getData?tabela=tipos_tarefa');
+                const getData = await getResponse.json();
+                
+                // Teste 2: Criar dados
+                const createData = {
+                    tabela: 'tipos_tarefa',
+                    dados: {
+                        tipo: 'Teste API',
+                        descricao: 'Teste de integração',
+                        ativo: true
+                    }
+                };
+                
+                const createResponse = await fetch('/.netlify/functions/saveData', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(createData)
+                });
+                
+                const createResult = await createResponse.json();
+                
+                testDiv.className = 'test-item success';
+                resultDiv.textContent = `✅ API funcionando perfeitamente!\n\nBusca: ${getData.success ? 'OK' : 'ERRO'}\nCriação: ${createResult.success ? 'OK' : 'ERRO'}\n\nDados criados: ${JSON.stringify(createResult.data, null, 2)}`;
+            } catch (error) {
+                testDiv.className = 'test-item error';
+                resultDiv.textContent = `❌ Erro: ${error.message}`;
+            }
+        }
+
+        // Auto-teste ao carregar a página
+        window.addEventListener('load', () => {
+            console.log('Página de teste carregada. Execute os testes manualmente.');
+        });
+    </script>
+</body>
+</html>
+
+
