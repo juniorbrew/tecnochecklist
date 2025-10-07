@@ -1,16 +1,27 @@
 {
   "name": "infra-app",
   "version": "1.0.0",
-  "main": "main.js",
+  "description": "Tecno-Checklist - Aplicação de checklist técnico",
+  "main": "index.html",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
-    "start": "electron .",
+    "start": "echo 'Use Live Server no VS Code para desenvolvimento web'",
     "dev": "echo 'Use Live Server no VS Code para desenvolvimento web'",
     "serve": "echo 'Instale Node.js e execute: node servidor.js'"
   },
   "devDependencies": {
     "electron": "^28.1.0"
   },
-  "description": "Tecno-Checklist - Aplicação de checklist técnico",
-  "keywords": ["checklist", "tecnico", "web", "app"],
+  "keywords": [
+    "checklist",
+    "tecnico",
+    "web",
+    "app"
+  ],
   "author": "Tecno-Checklist Team"
 }
