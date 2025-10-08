@@ -16,12 +16,18 @@ export default async function handler(req, res) {
     }
 
     try {
+        console.log('Método:', req.method);
+        console.log('Body:', req.body);
+        
         // Verificar se é método POST
         if (req.method !== 'POST') {
             return res.status(405).json({ error: 'Método não permitido. Use POST.' });
         }
 
         const { tabela, dados } = req.body;
+        
+        console.log('Tabela:', tabela);
+        console.log('Dados:', dados);
         
         if (!tabela || !dados) {
             return res.status(400).json({ error: 'Parâmetros tabela e dados são obrigatórios' });
