@@ -16,6 +16,11 @@ export default async function handler(req, res) {
     }
 
     try {
+        // Verificar se é método POST
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Método não permitido. Use POST.' });
+        }
+
         const { tabela, dados } = req.body;
         
         if (!tabela || !dados) {
