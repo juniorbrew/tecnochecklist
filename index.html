@@ -3711,7 +3711,7 @@
                 async () => {
                     try {
                         // Deletar do Supabase
-                        await fetch(`/.netlify/functions/deleteData?tabela=clientes&id=${id}`, {
+                        await fetch(`/api/deleteData?tabela=clientes&id=${id}`, {
                             method: 'DELETE'
                         });
                         
@@ -3812,7 +3812,7 @@
                 async () => {
                     try {
                         // Deletar do Supabase
-                        await fetch(`/.netlify/functions/deleteData?tabela=tecnicos&id=${id}`, {
+                        await fetch(`/api/deleteData?tabela=tecnicos&id=${id}`, {
                             method: 'DELETE'
                         });
                         
@@ -3906,7 +3906,7 @@
                 async () => {
                     try {
                         // Deletar do Supabase
-                        await fetch(`/.netlify/functions/deleteData?tabela=tipos_tarefa&id=${tipo.id}`, {
+                        await fetch(`/api/deleteData?tabela=tipos_tarefa&id=${tipo.id}`, {
                             method: 'DELETE'
                         });
                         
@@ -4115,7 +4115,7 @@
                 async () => {
                     try {
                         // Deletar do Supabase
-                        await fetch(`/.netlify/functions/deleteData?tabela=tarefas&id=${id}`, {
+                        await fetch(`/api/deleteData?tabela=tarefas&id=${id}`, {
                             method: 'DELETE'
                         });
                         
@@ -6016,10 +6016,10 @@
             try {
                 // Carregar dados do Supabase via funções serverless
                 const [clientesData, tecnicosData, tiposData, tarefasData] = await Promise.all([
-                    fetch('/.netlify/functions/getData?tabela=clientes').then(r => r.json()),
-                    fetch('/.netlify/functions/getData?tabela=tecnicos').then(r => r.json()),
-                    fetch('/.netlify/functions/getData?tabela=tipos_tarefa').then(r => r.json()),
-                    fetch('/.netlify/functions/getData?tabela=tarefas').then(r => r.json())
+                    fetch('/api/getData?tabela=clientes').then(r => r.json()),
+                    fetch('/api/getData?tabela=tecnicos').then(r => r.json()),
+                    fetch('/api/getData?tabela=tipos_tarefa').then(r => r.json()),
+                    fetch('/api/getData?tabela=tarefas').then(r => r.json())
                 ]);
 
                 clientes = clientesData.data || [];
@@ -6069,7 +6069,7 @@
                     if (cliente.id && !cliente.id.toString().startsWith('temp_')) {
                         // Atualizar cliente existente
                         promises.push(
-                            fetch('/.netlify/functions/updateData', {
+                            fetch('/api/updateData', {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -6082,7 +6082,7 @@
                     } else {
                         // Criar novo cliente
                         promises.push(
-                            fetch('/.netlify/functions/saveData', {
+                            fetch('/api/saveData', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -6098,7 +6098,7 @@
                 for (const tecnico of tecnicos) {
                     if (tecnico.id && !tecnico.id.toString().startsWith('temp_')) {
                         promises.push(
-                            fetch('/.netlify/functions/updateData', {
+                            fetch('/api/updateData', {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -6110,7 +6110,7 @@
                         );
                     } else {
                         promises.push(
-                            fetch('/.netlify/functions/saveData', {
+                            fetch('/api/saveData', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -6126,7 +6126,7 @@
                 for (const tipo of tipos) {
                     if (tipo.id && !tipo.id.toString().startsWith('temp_')) {
                         promises.push(
-                            fetch('/.netlify/functions/updateData', {
+                            fetch('/api/updateData', {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -6138,7 +6138,7 @@
                         );
                     } else {
                         promises.push(
-                            fetch('/.netlify/functions/saveData', {
+                            fetch('/api/saveData', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -6154,7 +6154,7 @@
                 for (const tarefa of tarefas) {
                     if (tarefa.id && !tarefa.id.toString().startsWith('temp_')) {
                         promises.push(
-                            fetch('/.netlify/functions/updateData', {
+                            fetch('/api/updateData', {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -6166,7 +6166,7 @@
                         );
                     } else {
                         promises.push(
-                            fetch('/.netlify/functions/saveData', {
+                            fetch('/api/saveData', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
