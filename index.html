@@ -6104,7 +6104,9 @@
 
                 // Salvar técnicos
                 for (const tecnico of tecnicos) {
-                    if (tecnico.id && !tecnico.id.toString().startsWith('temp_')) {
+                    // Verificar se é um técnico novo (sem created_at) ou existente
+                    if (tecnico.created_at) {
+                        // Atualizar técnico existente
                         promises.push(
                             fetch('/api/updateData', {
                                 method: 'PUT',
@@ -6117,6 +6119,7 @@
                             })
                         );
                     } else {
+                        // Criar novo técnico
                         promises.push(
                             fetch('/api/saveData', {
                                 method: 'POST',
@@ -6132,7 +6135,9 @@
 
                 // Salvar tipos
                 for (const tipo of tipos) {
-                    if (tipo.id && !tipo.id.toString().startsWith('temp_')) {
+                    // Verificar se é um tipo novo (sem created_at) ou existente
+                    if (tipo.created_at) {
+                        // Atualizar tipo existente
                         promises.push(
                             fetch('/api/updateData', {
                                 method: 'PUT',
@@ -6145,6 +6150,7 @@
                             })
                         );
                     } else {
+                        // Criar novo tipo
                         promises.push(
                             fetch('/api/saveData', {
                                 method: 'POST',
@@ -6160,7 +6166,9 @@
 
                 // Salvar tarefas
                 for (const tarefa of tarefas) {
-                    if (tarefa.id && !tarefa.id.toString().startsWith('temp_')) {
+                    // Verificar se é uma tarefa nova (sem created_at) ou existente
+                    if (tarefa.created_at) {
+                        // Atualizar tarefa existente
                         promises.push(
                             fetch('/api/updateData', {
                                 method: 'PUT',
@@ -6173,6 +6181,7 @@
                             })
                         );
                     } else {
+                        // Criar nova tarefa
                         promises.push(
                             fetch('/api/saveData', {
                                 method: 'POST',
