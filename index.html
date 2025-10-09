@@ -6022,10 +6022,10 @@
                     fetch('/api/getData?tabela=tarefas').then(r => r.json())
                 ]);
 
-                clientes = clientesData.data || [];
-                tecnicos = tecnicosData.data || [];
-                tipos = tiposData.data || [];
-                tarefas = tarefasData.data || [];
+                clientes = clientesData || [];
+                tecnicos = tecnicosData || [];
+                tipos = tiposData || [];
+                tarefas = tarefasData || [];
 
                 // Atualizar interface
                 renderClientes();
