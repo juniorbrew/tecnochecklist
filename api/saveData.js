@@ -34,10 +34,15 @@ export default async function handler(req, res) {
         }
 
         // Salvar no Supabase
+        console.log('Tentando salvar na tabela:', tabela);
+        console.log('Dados a serem salvos:', dados);
+        
         const { data: resultado, error } = await supabase
             .from(tabela)
             .insert([dados])
             .select();
+            
+        console.log('Resultado Supabase:', { data: resultado, error });
 
         if (error) {
             console.error('Erro Supabase:', error);

@@ -3946,7 +3946,7 @@
                 id: crypto.randomUUID(),
                 titulo, cliente, tecnico, tipo, data, prioridade, observacoes,
                 status: 'pendente',
-                checklist: tipoObj ? tipoObj.checklist.map(item => ({ item, concluido: false })) : [],
+                checklist: tipoObj && tipoObj.checklist ? tipoObj.checklist.map(item => ({ item, concluido: false })) : [],
                 created_at: new Date().toISOString()
             };
             
