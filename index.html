@@ -3947,7 +3947,7 @@
                 titulo, cliente, tecnico, tipo, data, prioridade, observacoes,
                 status: 'pendente',
                 checklist: tipoObj ? tipoObj.checklist.map(item => ({ item, concluido: false })) : [],
-                dataCriacao: new Date().toISOString()
+                created_at: new Date().toISOString()
             };
             
             tarefas.push(novaTarefa);
@@ -4045,7 +4045,9 @@
         }
 
         function toggleChecklistItem(tarefaId, itemIndex) {
+            console.log('Toggle checklist:', tarefaId, itemIndex);
             const tarefa = tarefas.find(t => t.id === tarefaId);
+            console.log('Tarefa encontrada:', tarefa);
             if (tarefa && tarefa.checklist[itemIndex]) {
                 tarefa.checklist[itemIndex].concluido = !tarefa.checklist[itemIndex].concluido;
                 
