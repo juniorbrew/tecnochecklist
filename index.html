@@ -3671,10 +3671,10 @@
                     <td>${cliente.cidade || '-'}</td>
                     <td>${cliente.cep || '-'}</td>
                     <td>
-                        <button onclick="editCliente(${cliente.id})" class="btn btn-info btn-sm">
+                        <button onclick="editCliente('${cliente.id}')" class="btn btn-info btn-sm">
                             <i class="fas fa-edit"></i> Editar
                         </button>
-                        <button onclick="deleteCliente(${cliente.id})" class="btn btn-danger btn-sm">
+                        <button onclick="deleteCliente('${cliente.id}')" class="btn btn-danger btn-sm">
                             <i class="fas fa-trash"></i> Excluir
                         </button>
                     </td>
@@ -3776,10 +3776,10 @@
                     <td>${tecnico.email || '-'}</td>
                     <td><span class="status-${tecnico.status}">${tecnico.status}</span></td>
                     <td>
-                        <button onclick="editTecnico(${tecnico.id})" class="btn btn-info btn-sm">
+                        <button onclick="editTecnico('${tecnico.id}')" class="btn btn-info btn-sm">
                             <i class="fas fa-edit"></i> Editar
                         </button>
-                        <button onclick="deleteTecnico(${tecnico.id})" class="btn btn-danger btn-sm">
+                        <button onclick="deleteTecnico('${tecnico.id}')" class="btn btn-danger btn-sm">
                             <i class="fas fa-trash"></i> Excluir
                         </button>
                     </td>
