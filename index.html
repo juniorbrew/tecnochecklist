@@ -6066,7 +6066,8 @@
                 
                 // Salvar clientes
                 for (const cliente of clientes) {
-                    if (cliente.id && !cliente.id.toString().startsWith('temp_')) {
+                    // Verificar se é um cliente novo (sem created_at) ou existente
+                    if (cliente.created_at) {
                         // Atualizar cliente existente
                         promises.push(
                             fetch('/api/updateData', {
