@@ -5282,6 +5282,8 @@
                         
                         // Abrir WhatsApp
                         console.log('Tentando abrir WhatsApp com URL:', url);
+                        console.log('Telefone:', telefone);
+                        console.log('Relatório:', relatorio);
                         const novaJanela = window.open(url, '_blank', 'noopener,noreferrer');
                         
                         if (novaJanela) {
@@ -7318,12 +7320,14 @@
 
         // Gerar relatório
         function generateReport(type) {
+            console.log('Gerando relatório:', type);
             currentReport = type;
             showReportModal();
         }
 
         // Mostrar modal de relatório
         function showReportModal() {
+            console.log('Mostrando modal de relatório');
             const modal = document.createElement('div');
             modal.className = 'modal active';
             modal.innerHTML = `
