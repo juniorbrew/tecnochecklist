@@ -16,6 +16,11 @@ export default async function handler(req, res) {
     }
 
     try {
+        // Verificar se é método PUT
+        if (req.method !== 'PUT') {
+            return res.status(405).json({ error: 'Método não permitido. Use PUT.' });
+        }
+
         const { tabela, id, dados } = req.body;
         
         if (!tabela || !id || !dados) {
