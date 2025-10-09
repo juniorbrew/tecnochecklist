@@ -3652,6 +3652,7 @@
             saveData();
             document.getElementById('cliente-form').reset();
             renderClientes();
+            updateStats();
             updateSelects();
         }
 
@@ -3757,6 +3758,7 @@
             saveData();
             document.getElementById('tecnico-form').reset();
             renderTecnicos();
+            updateStats();
             updateSelects();
         }
 
@@ -3855,6 +3857,7 @@
             saveData();
             document.getElementById('tipo-form').reset();
             renderTipos();
+            updateStats();
             updateSelects();
         }
 
@@ -3948,6 +3951,7 @@
             saveData();
             document.getElementById('tarefa-form').reset();
             renderTarefas();
+            updateStats();
             showNotification('✅ Tarefa criada com sucesso!', 'success');
         }
 
