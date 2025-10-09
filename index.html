@@ -3642,8 +3642,8 @@
             } else {
                 // Adicionar novo cliente
                 const novoCliente = {
-                    id: Date.now(),
-                    nome, cnpj, whatsapp, endereco, bairro, cidade, cep
+                    id: crypto.randomUUID(),
+                    nome, cnpj, whatsapp, endereco, bairro, cidade, cep, ativo: true
                 };
                 clientes.push(novoCliente);
                 showNotification('✅ Cliente adicionado com sucesso!', 'success');
@@ -3747,7 +3747,7 @@
                 editingTecnicoId = null;
             } else {
                 const novoTecnico = {
-                    id: Date.now(),
+                    id: crypto.randomUUID(),
                     nome, especialidade, telefone, email, status
                 };
                 tecnicos.push(novoTecnico);
@@ -3937,7 +3937,7 @@
             
             const tipoObj = tipos.find(t => t.nome === tipo);
             const novaTarefa = {
-                id: Date.now(),
+                id: crypto.randomUUID(),
                 titulo, cliente, tecnico, tipo, data, prioridade, observacoes,
                 status: 'pendente',
                 checklist: tipoObj ? tipoObj.checklist.map(item => ({ item, concluido: false })) : [],
@@ -4150,7 +4150,7 @@
                 editingUsuarioId = null;
             } else {
                 const novoUsuario = {
-                    id: Date.now(),
+                    id: crypto.randomUUID(),
                     nome, usuario, senha, perfil, ativo
                 };
                 usuarios.push(novoUsuario);
