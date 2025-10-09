@@ -881,7 +881,7 @@
         }
 
         .table tbody tr {
-            transition: all 0.3s ease;
+            /* transition: all 0.3s ease; */
         }
 
         .table tbody tr:hover {
@@ -3590,7 +3590,9 @@
             }
             
             // Atualizar dados quando mudar de seção
-            if (sectionName === 'clientes') {
+            if (sectionName === 'dashboard') {
+                updateStats();
+            } else if (sectionName === 'clientes') {
                 renderClientes();
             } else if (sectionName === 'tecnicos') {
                 renderTecnicos();
@@ -3999,25 +4001,25 @@
                     </td>
                     <td>
                         <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
-                            <button onclick="updateTarefaStatus(${tarefa.id}, 'em-andamento')" 
+                            <button onclick="updateTarefaStatus('${tarefa.id}', 'em-andamento')" 
                                     class="btn btn-info btn-sm" ${tarefa.status === 'em-andamento' ? 'disabled' : ''} 
                                     style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" title="Iniciar">
                                 <i class="fas fa-play" style="font-size: 1rem;"></i>
                             </button>
-                            <button onclick="updateTarefaStatus(${tarefa.id}, 'concluida')" 
+                            <button onclick="updateTarefaStatus('${tarefa.id}', 'concluida')" 
                                     class="btn btn-success btn-sm" ${tarefa.status === 'concluida' ? 'disabled' : ''}
                                     style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" title="Concluir">
                                 <i class="fas fa-check" style="font-size: 1rem;"></i>
                             </button>
-                            <button onclick="imprimirTarefa(${tarefa.id})" class="btn btn-warning btn-sm"
+                            <button onclick="imprimirTarefa('${tarefa.id}')" class="btn btn-warning btn-sm"
                                     style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" title="Imprimir">
                                 <i class="fas fa-print" style="font-size: 1rem;"></i>
                             </button>
-                            <button onclick="abrirModoTecnico(${tarefa.id})" class="btn btn-info btn-sm"
+                            <button onclick="abrirModoTecnico('${tarefa.id}')" class="btn btn-info btn-sm"
                                     style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" title="Checklist & Modo Técnico">
                                 <i class="fas fa-tools" style="font-size: 1rem;"></i>
                             </button>
-                            <button onclick="deleteTarefa(${tarefa.id})" class="btn btn-danger btn-sm"
+                            <button onclick="deleteTarefa('${tarefa.id}')" class="btn btn-danger btn-sm"
                                     style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" title="Excluir">
                                 <i class="fas fa-trash" style="font-size: 1rem;"></i>
                             </button>
@@ -4360,25 +4362,25 @@
                     </td>
                     <td>
                         <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
-                            <button onclick="updateTarefaStatus(${tarefa.id}, 'em-andamento')" 
+                            <button onclick="updateTarefaStatus('${tarefa.id}', 'em-andamento')" 
                                     class="btn btn-info btn-sm" ${tarefa.status === 'em-andamento' ? 'disabled' : ''} 
                                     style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" title="Iniciar">
                                 <i class="fas fa-play" style="font-size: 1rem;"></i>
                             </button>
-                            <button onclick="updateTarefaStatus(${tarefa.id}, 'concluida')" 
+                            <button onclick="updateTarefaStatus('${tarefa.id}', 'concluida')" 
                                     class="btn btn-success btn-sm" ${tarefa.status === 'concluida' ? 'disabled' : ''}
                                     style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" title="Concluir">
                                 <i class="fas fa-check" style="font-size: 1rem;"></i>
                             </button>
-                            <button onclick="imprimirTarefa(${tarefa.id})" class="btn btn-warning btn-sm"
+                            <button onclick="imprimirTarefa('${tarefa.id}')" class="btn btn-warning btn-sm"
                                     style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" title="Imprimir">
                                 <i class="fas fa-print" style="font-size: 1rem;"></i>
                             </button>
-                            <button onclick="abrirModoTecnico(${tarefa.id})" class="btn btn-info btn-sm"
+                            <button onclick="abrirModoTecnico('${tarefa.id}')" class="btn btn-info btn-sm"
                                     style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" title="Checklist & Modo Técnico">
                                 <i class="fas fa-tools" style="font-size: 1rem;"></i>
                             </button>
-                            <button onclick="deleteTarefa(${tarefa.id})" class="btn btn-danger btn-sm"
+                            <button onclick="deleteTarefa('${tarefa.id}')" class="btn btn-danger btn-sm"
                                     style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" title="Excluir">
                                 <i class="fas fa-trash" style="font-size: 1rem;"></i>
                             </button>
