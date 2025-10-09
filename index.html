@@ -3611,7 +3611,7 @@
         }
 
         // CLIENTES
-        function handleClienteSubmit(e) {
+        async function handleClienteSubmit(e) {
             e.preventDefault();
             
             // Validar formulário antes de submeter
@@ -3649,7 +3649,7 @@
                 showNotification('✅ Cliente adicionado com sucesso!', 'success');
             }
             
-            saveData();
+            await saveData();
             document.getElementById('cliente-form').reset();
             renderClientes();
             updateStats();
@@ -3719,6 +3719,7 @@
                         // Remover da lista local
                         clientes = clientes.filter(c => c.id !== id);
                         renderClientes();
+                        updateStats();
                         updateSelects();
                         showNotification('✅ Cliente excluído com sucesso!', 'success');
                     } catch (error) {

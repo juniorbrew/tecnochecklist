@@ -16,6 +16,11 @@ export default async function handler(req, res) {
     }
 
     try {
+        // Verificar se é método DELETE
+        if (req.method !== 'DELETE') {
+            return res.status(405).json({ error: 'Método não permitido. Use DELETE.' });
+        }
+
         const { tabela, id } = req.query;
         
         if (!tabela || !id) {
