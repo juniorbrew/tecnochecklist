@@ -3947,7 +3947,7 @@
                 titulo, cliente, tecnico, tipo, data, prioridade, observacoes,
                 status: 'pendente',
                 checklist: tipoObj && tipoObj.checklist ? tipoObj.checklist.map(item => ({ item, concluido: false })) : [],
-                created_at: new Date().toISOString()
+                _isNew: true  // Marca para indicar que é uma nova tarefa
             };
             
             tarefas.push(novaTarefa);
@@ -6170,8 +6170,21 @@
 
                 // Salvar tarefas
                 for (const tarefa of tarefas) {
-                    // Verificar se é uma tarefa nova (sem created_at) ou existente
-                    if (tarefa.created_at) {
+                    // Verificar se é uma tarefa nova (_isNew) ou existente
+                    if (tarefa._isNew) {
+                        // Criar nova tarefa
+                        const { _isNew, ...tarefaData } = tarefa; // Remove a marca _isNew antes de enviar
+                        promises.push(
+                            fetch('/api/saveData', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tabela: 'tarefas',
+                                    dados: tarefaData
+                                })
+                            })
+                        );
+                    } else if (tarefa.created_at) {
                         // Atualizar tarefa existente
                         promises.push(
                             fetch('/api/updateData', {
@@ -6180,18 +6193,6 @@
                                 body: JSON.stringify({
                                     tabela: 'tarefas',
                                     id: tarefa.id,
-                                    dados: tarefa
-                                })
-                            })
-                        );
-                    } else {
-                        // Criar nova tarefa
-                        promises.push(
-                            fetch('/api/saveData', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    tabela: 'tarefas',
                                     dados: tarefa
                                 })
                             })
