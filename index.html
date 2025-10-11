@@ -4123,26 +4123,9 @@
         }
 
         function updateStatusInTable(tarefaId) {
-            // Encontrar a linha da tarefa na tabela principal
-            const table = document.getElementById('tarefas-tbody');
-            const rows = table.querySelectorAll('tr');
-            
-            rows.forEach(row => {
-                // Verificar se esta linha contém botões para a tarefa específica
-                const buttons = row.querySelectorAll(`button[onclick*="${tarefaId}"]`);
-                if (buttons.length > 0) {
-                    // Atualizar status da tarefa na tabela (6ª coluna - índice 5)
-                    const cells = row.querySelectorAll('td');
-                    if (cells.length > 5) {
-                        const statusCell = cells[5];
-                        const tarefa = tarefas.find(t => t.id === tarefaId);
-                        if (tarefa) {
-                            const statusClass = `status-${tarefa.status.replace(' ', '-')}`;
-                            statusCell.innerHTML = `<span class="task-status ${statusClass}">${tarefa.status}</span>`;
-                        }
-                    }
-                }
-            });
+            // Simplesmente re-renderizar a tabela inteira para garantir sincronização
+            renderTarefas();
+            updateStats();
         }
 
         function updateTarefaStatus(tarefaId, novoStatus) {
@@ -6300,6 +6283,7 @@
                             data: tarefa.data,
                             prioridade: tarefa.prioridade,
                             status: tarefa.status,
+                            checklist: tarefa.checklist || null,
                             progresso: tarefa.progresso || 0,
                             observacoes: tarefa.observacoes || null
                         };
@@ -6337,6 +6321,7 @@
                             data: tarefa.data,
                             prioridade: tarefa.prioridade,
                             status: tarefa.status,
+                            checklist: tarefa.checklist || null,
                             progresso: tarefa.progresso || 0,
                             observacoes: tarefa.observacoes || null
                         };
