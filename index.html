@@ -3986,8 +3986,10 @@
             tarefas.forEach(tarefa => {
                 const row = document.createElement('tr');
                 const statusClass = `status-${tarefa.status.replace(' ', '-')}`;
-                const progresso = tarefa.checklist.length > 0 ? 
-                    Math.round((tarefa.checklist.filter(item => item.concluido).length / tarefa.checklist.length) * 100) : 0;
+                // Verificar se checklist existe antes de acessar
+                const checklist = tarefa.checklist || [];
+                const progresso = checklist.length > 0 ? 
+                    Math.round((checklist.filter(item => item.concluido).length / checklist.length) * 100) : 0;
                 
                 const prioridadeClass = `prioridade-${tarefa.prioridade}`;
                 const prioridadeIcon = {
@@ -6064,12 +6066,34 @@
                 tipos = tiposData || [];
                 tarefas = tarefasData || [];
 
+                // Processar tarefas: adicionar nomes e checklist para exibição
+                tarefas = tarefas.map(tarefa => {
+                    // Buscar objetos completos pelos IDs
+                    const clienteObj = clientes.find(c => c.id === tarefa.cliente_id);
+                    const tecnicoObj = tecnicos.find(t => t.id === tarefa.tecnico_id);
+                    const tipoObj = tipos.find(tp => tp.id === tarefa.tipo_id);
+                    
+                    return {
+                        ...tarefa,
+                        // Adicionar nomes para exibição (se não existirem)
+                        cliente: tarefa.cliente || (clienteObj ? clienteObj.nome : 'Cliente não encontrado'),
+                        tecnico: tarefa.tecnico || (tecnicoObj ? tecnicoObj.nome : 'Técnico não encontrado'),
+                        tipo: tarefa.tipo || (tipoObj ? tipoObj.nome : 'Tipo não encontrado'),
+                        // Inicializar checklist se não existir
+                        checklist: tarefa.checklist || (tipoObj && tipoObj.checklist ? 
+                            tipoObj.checklist.map(item => ({ item, concluido: false })) : [])
+                    };
+                });
+
+                console.log('[loadData] Tarefas processadas:', tarefas.length);
+
                 // Atualizar interface
                 renderClientes();
                 renderTecnicos();
                 renderTipos();
                 renderTarefas();
                 updateStats();
+                updateSelects(); // Atualizar selects com os dados carregados
 
                 showNotification('✅ Dados carregados do banco de dados!', 'success');
             } catch (error) {
