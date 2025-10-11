@@ -4940,52 +4940,25 @@
                         display: flex;
                         gap: 10px;
                     ">
-                        <button onclick="enviarChecklistWhatsApp(${tarefaId})" 
-                                style="
-                                    flex: 1;
-                                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                                    color: white;
-                                    border: none;
-                                    padding: 15px;
-                                    border-radius: 10px;
-                                    font-size: 16px;
-                                    font-weight: 600;
-                                    cursor: pointer;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    gap: 8px;
-                                ">
-                            📱 Enviar PDF + WhatsApp
-                        </button>
-                        <button onclick="imprimirTarefa(${tarefaId})" 
-                                style="
-                                    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-                                    color: white;
-                                    border: none;
-                                    padding: 15px;
-                                    border-radius: 10px;
-                                    font-size: 16px;
-                                    font-weight: 600;
-                                    cursor: pointer;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    gap: 8px;
-                                ">
-                            🖨️ Imprimir
-                        </button>
                         <button onclick="this.closest('.modal').remove()" 
                                 style="
-                                    background: #6b7280;
+                                    flex: 1;
+                                    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
                                     color: white;
                                     border: none;
-                                    padding: 15px 20px;
-                                    border-radius: 10px;
+                                    padding: 16px 20px;
+                                    border-radius: 12px;
                                     font-size: 16px;
+                                    font-weight: 600;
                                     cursor: pointer;
+                                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                                    transition: all 0.3s ease;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    gap: 8px;
                                 ">
-                            ✕ Fechar
+                            ✅ Salvar e Fechar
                         </button>
                     </div>
                 </div>
@@ -5094,8 +5067,10 @@
                 }
             }
             
+            // Atualizar texto de progresso
+            const progressoTexto = `${concluidos} de ${total} concluídos (${percentual}%)`;
             if (progressText) {
-                progressText.textContent = `${concluidos} de ${total} concluídos (${percentual}%)`;
+                progressText.textContent = progressoTexto;
             }
             
             // Atualizar status da tarefa
@@ -5112,16 +5087,15 @@
                 navigator.vibrate(10); // Vibração curta de 10ms
             }
             
-            // Indicador visual de salvamento
+            // Indicador visual de salvamento (breve)
             if (progressText) {
-                const originalText = progressText.textContent;
-                progressText.textContent = '💾 Salvando...';
+                progressText.textContent = '💾 ' + progressoTexto;
                 progressText.style.color = '#f59e0b';
                 
                 setTimeout(() => {
-                    progressText.textContent = originalText;
-                    progressText.style.color = '';
-                }, 1000);
+                    progressText.textContent = progressoTexto;
+                    progressText.style.color = '#6b7280';
+                }, 800);
             }
             
             // Salvar dados
