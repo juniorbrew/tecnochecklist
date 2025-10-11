@@ -6372,7 +6372,8 @@
             
             animateNumber('total-clientes', 0, totalClientes, 2000);
             animateNumber('total-tecnicos', 0, totalTecnicos, 2500);
-            animateNumber('total-tarefas', 0, totalTarefas, 3000);
+            animateNumber('total-tarefas', 0, tarefasPendentes, 3000);
+            animateNumber('tarefas-em-andamento', 0, tarefasEmAndamento, 3200);
             animateNumber('tarefas-concluidas', 0, tarefasConcluidas, 3500);
             
             // Atualizar estatísticas adicionais se existirem
@@ -6390,14 +6391,19 @@
                         <p>Técnicos Online</p>
                     </div>
                     <div class="stat-card">
-                        <i class="fas fa-tasks"></i>
-                        <h3 id="total-tarefas">${totalTarefas}</h3>
-                        <p>Tarefas em Andamento</p>
+                        <i class="fas fa-clock"></i>
+                        <h3 id="total-tarefas">${tarefasPendentes}</h3>
+                        <p>Tarefas Pendentes</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-spinner"></i>
+                        <h3 id="tarefas-em-andamento">${tarefasEmAndamento}</h3>
+                        <p>Em Andamento</p>
                     </div>
                     <div class="stat-card">
                         <i class="fas fa-check-circle"></i>
                         <h3 id="tarefas-concluidas">${tarefasConcluidas}</h3>
-                        <p>Concluídas Hoje</p>
+                        <p>Concluídas</p>
                     </div>
                 `;
                 statsContainer.innerHTML = statsHTML;
