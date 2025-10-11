@@ -6053,6 +6053,8 @@
 
         async function loadData() {
             try {
+                console.log('[loadData] Iniciando carregamento...');
+                
                 // Carregar dados do Supabase via funções serverless
                 const [clientesData, tecnicosData, tiposData, tarefasData] = await Promise.all([
                     fetch('/api/getData?tabela=clientes').then(r => r.json()),
@@ -6061,19 +6063,36 @@
                     fetch('/api/getData?tabela=tarefas').then(r => r.json())
                 ]);
 
+                console.log('[loadData] Dados recebidos:', {
+                    clientes: clientesData?.length,
+                    tecnicos: tecnicosData?.length,
+                    tipos: tiposData?.length,
+                    tarefas: tarefasData?.length
+                });
+
                 clientes = clientesData || [];
                 tecnicos = tecnicosData || [];
                 tipos = tiposData || [];
                 tarefas = tarefasData || [];
 
+                console.log('[loadData] Tarefas brutas do banco:', tarefas);
+
                 // Processar tarefas: adicionar nomes e checklist para exibição
-                tarefas = tarefas.map(tarefa => {
+                tarefas = tarefas.map((tarefa, index) => {
+                    console.log(`[loadData] Processando tarefa ${index + 1}:`, tarefa);
+                    
                     // Buscar objetos completos pelos IDs
                     const clienteObj = clientes.find(c => c.id === tarefa.cliente_id);
                     const tecnicoObj = tecnicos.find(t => t.id === tarefa.tecnico_id);
                     const tipoObj = tipos.find(tp => tp.id === tarefa.tipo_id);
                     
-                    return {
+                    console.log(`[loadData] Objetos encontrados:`, {
+                        cliente: clienteObj?.nome,
+                        tecnico: tecnicoObj?.nome,
+                        tipo: tipoObj?.nome
+                    });
+                    
+                    const tarefaProcessada = {
                         ...tarefa,
                         // Adicionar nomes para exibição (se não existirem)
                         cliente: tarefa.cliente || (clienteObj ? clienteObj.nome : 'Cliente não encontrado'),
@@ -6083,11 +6102,15 @@
                         checklist: tarefa.checklist || (tipoObj && tipoObj.checklist ? 
                             tipoObj.checklist.map(item => ({ item, concluido: false })) : [])
                     };
+                    
+                    console.log(`[loadData] Tarefa processada:`, tarefaProcessada);
+                    return tarefaProcessada;
                 });
 
-                console.log('[loadData] Tarefas processadas:', tarefas.length);
+                console.log('[loadData] Tarefas processadas:', tarefas.length, tarefas);
 
                 // Atualizar interface
+                console.log('[loadData] Renderizando interface...');
                 renderClientes();
                 renderTecnicos();
                 renderTipos();
@@ -6097,7 +6120,8 @@
 
                 showNotification('✅ Dados carregados do banco de dados!', 'success');
             } catch (error) {
-                console.error('Erro ao carregar dados do banco:', error);
+                console.error('[loadData] Erro ao carregar dados do banco:', error);
+                console.error('[loadData] Stack trace:', error.stack);
                 showNotification('⚠️ Erro ao carregar dados do banco. Usando dados locais.', 'warning');
                 
                 // Fallback para localStorage
@@ -6246,6 +6270,17 @@
                                     tabela: 'tarefas',
                                     dados: tarefaData
                                 })
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                console.log('[saveData] Tarefa salva:', result);
+                                // Marcar tarefa como salva removendo _isNew e adicionando created_at
+                                const tarefaIndex = tarefas.findIndex(t => t.id === tarefa.id);
+                                if (tarefaIndex !== -1) {
+                                    delete tarefas[tarefaIndex]._isNew;
+                                    tarefas[tarefaIndex].created_at = result.data?.created_at || new Date().toISOString();
+                                }
+                                return result;
                             })
                         );
                     } else if (tarefa.created_at) {
