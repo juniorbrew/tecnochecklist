@@ -3934,18 +3934,39 @@
             e.preventDefault();
             
             const titulo = document.getElementById('tarefa-titulo').value;
-            const cliente = document.getElementById('tarefa-cliente').value;
-            const tecnico = document.getElementById('tarefa-tecnico').value;
-            const tipo = document.getElementById('tarefa-tipo').value;
+            const cliente_id = document.getElementById('tarefa-cliente').value; // Agora é UUID
+            const tecnico_id = document.getElementById('tarefa-tecnico').value; // Agora é UUID
+            const tipo_id = document.getElementById('tarefa-tipo').value; // Agora é UUID
             const data = document.getElementById('tarefa-data').value;
             const prioridade = document.getElementById('tarefa-prioridade').value;
             const observacoes = document.getElementById('tarefa-observacoes').value;
             
-            const tipoObj = tipos.find(t => t.nome === tipo);
+            // Validar se cliente, técnico e tipo foram selecionados
+            if (!cliente_id || !tecnico_id || !tipo_id) {
+                showNotification('⚠️ Por favor, selecione cliente, técnico e tipo de serviço!', 'warning');
+                return;
+            }
+            
+            // Buscar objetos completos para uso local
+            const clienteObj = clientes.find(c => c.id === cliente_id);
+            const tecnicoObj = tecnicos.find(t => t.id === tecnico_id);
+            const tipoObj = tipos.find(t => t.id === tipo_id);
+            
+            // Criar tarefa no formato local (com nomes para exibição)
             const novaTarefa = {
                 id: crypto.randomUUID(),
-                titulo, cliente, tecnico, tipo, data, prioridade, observacoes,
+                titulo,
+                cliente: clienteObj ? clienteObj.nome : '', // Nome para exibição local
+                tecnico: tecnicoObj ? tecnicoObj.nome : '', // Nome para exibição local
+                tipo: tipoObj ? tipoObj.nome : '', // Nome para exibição local
+                cliente_id, // ID para salvar no banco
+                tecnico_id, // ID para salvar no banco
+                tipo_id, // ID para salvar no banco
+                data,
+                prioridade,
+                observacoes,
                 status: 'pendente',
+                progresso: 0,
                 checklist: tipoObj && tipoObj.checklist ? tipoObj.checklist.map(item => ({ item, concluido: false })) : [],
                 _isNew: true  // Marca para indicar que é uma nova tarefa
             };
@@ -4241,24 +4262,29 @@
             clienteSelect.innerHTML = '<option value="">Selecione o cliente</option>';
             filtroClienteSelect.innerHTML = '<option value="">Todos os clientes</option>';
             clientes.forEach(cliente => {
-                const option = `<option value="${cliente.nome}">${cliente.nome}</option>`;
+                // Usar ID como value para salvar no banco, nome como texto de exibição
+                const option = `<option value="${cliente.id}">${cliente.nome}</option>`;
                 clienteSelect.innerHTML += option;
-                filtroClienteSelect.innerHTML += option;
+                // Filtro usa nome para compatibilidade com sistema de busca
+                filtroClienteSelect.innerHTML += `<option value="${cliente.nome}">${cliente.nome}</option>`;
             });
             
             // Técnicos
             tecnicoSelect.innerHTML = '<option value="">Selecione o técnico</option>';
             filtroTecnicoSelect.innerHTML = '<option value="">Todos os técnicos</option>';
             tecnicos.forEach(tecnico => {
-                const option = `<option value="${tecnico.nome}">${tecnico.nome}</option>`;
+                // Usar ID como value para salvar no banco, nome como texto de exibição
+                const option = `<option value="${tecnico.id}">${tecnico.nome}</option>`;
                 tecnicoSelect.innerHTML += option;
-                filtroTecnicoSelect.innerHTML += option;
+                // Filtro usa nome para compatibilidade com sistema de busca
+                filtroTecnicoSelect.innerHTML += `<option value="${tecnico.nome}">${tecnico.nome}</option>`;
             });
             
             // Tipos
             tipoSelect.innerHTML = '<option value="">Selecione o tipo</option>';
             tipos.forEach(tipo => {
-                tipoSelect.innerHTML += `<option value="${tipo.nome}">${tipo.nome}</option>`;
+                // Usar ID como value para salvar no banco, nome como texto de exibição
+                tipoSelect.innerHTML += `<option value="${tipo.id}">${tipo.nome}</option>`;
             });
         }
 
@@ -6172,8 +6198,22 @@
                 for (const tarefa of tarefas) {
                     // Verificar se é uma tarefa nova (_isNew) ou existente
                     if (tarefa._isNew) {
-                        // Criar nova tarefa
-                        const { _isNew, ...tarefaData } = tarefa; // Remove a marca _isNew antes de enviar
+                        // Criar nova tarefa - enviar apenas campos que existem na tabela do Supabase
+                        const tarefaData = {
+                            id: tarefa.id,
+                            titulo: tarefa.titulo,
+                            cliente_id: tarefa.cliente_id,
+                            tecnico_id: tarefa.tecnico_id,
+                            tipo_id: tarefa.tipo_id,
+                            data: tarefa.data,
+                            prioridade: tarefa.prioridade,
+                            status: tarefa.status,
+                            progresso: tarefa.progresso || 0,
+                            observacoes: tarefa.observacoes || null
+                        };
+                        
+                        console.log('[Salvando tarefa]', tarefaData);
+                        
                         promises.push(
                             fetch('/api/saveData', {
                                 method: 'POST',
@@ -6186,6 +6226,18 @@
                         );
                     } else if (tarefa.created_at) {
                         // Atualizar tarefa existente
+                        const tarefaData = {
+                            titulo: tarefa.titulo,
+                            cliente_id: tarefa.cliente_id,
+                            tecnico_id: tarefa.tecnico_id,
+                            tipo_id: tarefa.tipo_id,
+                            data: tarefa.data,
+                            prioridade: tarefa.prioridade,
+                            status: tarefa.status,
+                            progresso: tarefa.progresso || 0,
+                            observacoes: tarefa.observacoes || null
+                        };
+                        
                         promises.push(
                             fetch('/api/updateData', {
                                 method: 'PUT',
@@ -6193,7 +6245,7 @@
                                 body: JSON.stringify({
                                     tabela: 'tarefas',
                                     id: tarefa.id,
-                                    dados: tarefa
+                                    dados: tarefaData
                                 })
                             })
                         );
