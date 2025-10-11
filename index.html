@@ -4834,7 +4834,8 @@
                         ${tarefa.checklist.map((item, index) => `
                             <div id="checklist-item-${tarefaId}-${index}" 
                                  class="checklist-item-mobile ${item.concluido ? 'completed' : ''}" 
-                                 onclick="toggleChecklistItemMobile(${tarefaId}, ${index})"
+                                 data-tarefa-id="${tarefaId}"
+                                 data-item-index="${index}"
                                  style="
                                     display: flex;
                                     align-items: center;
@@ -4984,6 +4985,28 @@
             `;
             
             document.body.appendChild(modal);
+            
+            // Adicionar event listeners para os itens do checklist
+            const checklistItems = modal.querySelectorAll('.checklist-item-mobile');
+            console.log('[abrirModoTecnico] Encontrados', checklistItems.length, 'itens do checklist');
+            
+            checklistItems.forEach((item, index) => {
+                const tarefaId = item.getAttribute('data-tarefa-id');
+                const itemIndex = item.getAttribute('data-item-index');
+                console.log(`[abrirModoTecnico] Adicionando event listener ao item ${index}:`, { tarefaId, itemIndex });
+                
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const tarefaId = this.getAttribute('data-tarefa-id');
+                    const itemIndex = parseInt(this.getAttribute('data-item-index'));
+                    console.log('[Event Listener] Clique detectado:', { tarefaId, itemIndex });
+                    toggleChecklistItemMobile(tarefaId, itemIndex);
+                });
+                
+                // Adicionar cursor pointer para indicar que é clicável
+                item.style.cursor = 'pointer';
+            });
             
             // Inicializar sistema de comentários
             initCommentsSystem(tarefaId);
