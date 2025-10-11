@@ -3980,10 +3980,27 @@
         }
 
         function renderTarefas() {
+            console.log('[renderTarefas] Iniciando renderização de', tarefas.length, 'tarefas');
+            
             const tbody = document.getElementById('tarefas-tbody');
             tbody.innerHTML = '';
             
-            tarefas.forEach(tarefa => {
+            if (tarefas.length === 0) {
+                console.log('[renderTarefas] Nenhuma tarefa para renderizar');
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem; color: var(--gray-500);">Nenhuma tarefa cadastrada</td></tr>';
+                return;
+            }
+            
+            tarefas.forEach((tarefa, index) => {
+                try {
+                    console.log(`[renderTarefas] Renderizando tarefa ${index + 1}:`, {
+                        id: tarefa.id,
+                        titulo: tarefa.titulo,
+                        cliente: tarefa.cliente,
+                        tecnico: tarefa.tecnico,
+                        tipo: tarefa.tipo,
+                        hasChecklist: !!tarefa.checklist
+                    });
                 const row = document.createElement('tr');
                 const statusClass = `status-${tarefa.status.replace(' ', '-')}`;
                 // Verificar se checklist existe antes de acessar
@@ -4051,7 +4068,23 @@
                 `;
                 
                 tbody.appendChild(row);
+                console.log(`[renderTarefas] Tarefa ${index + 1} renderizada com sucesso`);
+                
+                } catch (error) {
+                    console.error(`[renderTarefas] Erro ao renderizar tarefa ${index + 1}:`, error);
+                    console.error('[renderTarefas] Dados da tarefa com erro:', tarefa);
+                    // Adicionar linha de erro na tabela
+                    const errorRow = document.createElement('tr');
+                    errorRow.innerHTML = `
+                        <td colspan="9" style="background: #fee; color: #c00; padding: 1rem; text-align: center;">
+                            ⚠️ Erro ao renderizar tarefa: ${tarefa.titulo || 'Sem título'} - ${error.message}
+                        </td>
+                    `;
+                    tbody.appendChild(errorRow);
+                }
             });
+            
+            console.log('[renderTarefas] Renderização concluída');
         }
 
         function toggleChecklist(tarefaId) {
@@ -4992,11 +5025,37 @@
         }
 
         function toggleChecklistItemMobile(tarefaId, itemIndex) {
+            console.log('[toggleChecklistItemMobile] Iniciando:', { tarefaId, itemIndex });
+            
             const tarefa = tarefas.find(t => t.id === tarefaId);
-            if (!tarefa) return;
+            console.log('[toggleChecklistItemMobile] Tarefa encontrada:', tarefa);
+            
+            if (!tarefa) {
+                console.error('[toggleChecklistItemMobile] Tarefa não encontrada!');
+                return;
+            }
+            
+            if (!tarefa.checklist || !tarefa.checklist[itemIndex]) {
+                console.error('[toggleChecklistItemMobile] Checklist ou item não existe:', {
+                    hasChecklist: !!tarefa.checklist,
+                    checklistLength: tarefa.checklist?.length,
+                    itemIndex,
+                    itemExists: !!tarefa.checklist?.[itemIndex]
+                });
+                return;
+            }
+            
+            console.log('[toggleChecklistItemMobile] Estado atual:', {
+                item: tarefa.checklist[itemIndex],
+                concluido: tarefa.checklist[itemIndex].concluido
+            });
             
             // Toggle do item
             tarefa.checklist[itemIndex].concluido = !tarefa.checklist[itemIndex].concluido;
+            
+            console.log('[toggleChecklistItemMobile] Estado após toggle:', {
+                concluido: tarefa.checklist[itemIndex].concluido
+            });
             
             // Calcular progresso
             const concluidos = tarefa.checklist.filter(item => item.concluido).length;
@@ -5045,7 +5104,17 @@
             const checkbox = document.getElementById(`checkbox-${tarefaId}-${itemIndex}`);
             const text = document.getElementById(`text-${tarefaId}-${itemIndex}`);
             
+            console.log('[toggleChecklistItemMobile] Elementos encontrados:', {
+                itemElement: !!itemElement,
+                checkbox: !!checkbox,
+                text: !!text,
+                itemId: `checklist-item-${tarefaId}-${itemIndex}`,
+                checkboxId: `checkbox-${tarefaId}-${itemIndex}`,
+                textId: `text-${tarefaId}-${itemIndex}`
+            });
+            
             if (itemElement && checkbox && text) {
+                console.log('[toggleChecklistItemMobile] Atualizando visual do item');
                 const isCompleted = tarefa.checklist[itemIndex].concluido;
                 
                 // Animação simples
@@ -5055,6 +5124,7 @@
                 }, 100);
                 
                 if (isCompleted) {
+                    console.log('[toggleChecklistItemMobile] Marcando item como concluído');
                     // Item concluído
                     itemElement.style.background = '#f0fdf4';
                     itemElement.style.borderColor = '#10b981';
@@ -5071,6 +5141,7 @@
                     
                     itemElement.classList.add('completed');
                 } else {
+                    console.log('[toggleChecklistItemMobile] Desmarcando item');
                     // Item desmarcado
                     itemElement.style.background = '#ffffff';
                     itemElement.style.borderColor = '#e5e7eb';
@@ -5087,6 +5158,13 @@
                     
                     itemElement.classList.remove('completed');
                 }
+            } else {
+                console.error('[toggleChecklistItemMobile] Elementos não encontrados! Tentando recarregar modal...');
+                // Se os elementos não foram encontrados, pode ser que o modal foi recriado
+                // Tentar recarregar o modal
+                setTimeout(() => {
+                    abrirModoTecnico(tarefaId);
+                }, 100);
             }
             
             // Atualizar título da tarefa
