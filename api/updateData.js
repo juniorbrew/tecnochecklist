@@ -16,16 +16,25 @@ export default async function handler(req, res) {
     }
 
     try {
+        console.log('[updateData] Método:', req.method);
+        console.log('[updateData] Body:', req.body);
+        
         // Verificar se é método PUT
         if (req.method !== 'PUT') {
+            console.error('[updateData] Método incorreto:', req.method);
             return res.status(405).json({ error: 'Método não permitido. Use PUT.' });
         }
 
         const { tabela, id, dados } = req.body;
         
+        console.log('[updateData] Tabela:', tabela, 'ID:', id);
+        
         if (!tabela || !id || !dados) {
+            console.error('[updateData] Parâmetros faltando:', { tabela: !!tabela, id: !!id, dados: !!dados });
             return res.status(400).json({ error: 'Parâmetros tabela, id e dados são obrigatórios' });
         }
+
+        console.log('[updateData] Tentando atualizar na tabela:', tabela);
 
         // Atualizar no Supabase
         const { data: resultado, error } = await supabase
@@ -35,10 +44,14 @@ export default async function handler(req, res) {
             .select();
 
         if (error) {
-            console.error('Erro Supabase:', error);
-            return res.status(500).json({ error: 'Erro ao atualizar dados no banco' });
+            console.error('[updateData] Erro Supabase:', JSON.stringify(error));
+            return res.status(500).json({ 
+                error: 'Erro ao atualizar dados no banco',
+                details: error.message 
+            });
         }
 
+        console.log('[updateData] Sucesso! Dados atualizados:', resultado[0]?.id);
         return res.status(200).json({ 
             success: true, 
             message: 'Dados atualizados com sucesso',
@@ -46,7 +59,10 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('Erro:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor' });
+        console.error('[updateData] Erro exceção:', error.message, error.stack);
+        return res.status(500).json({ 
+            error: 'Erro interno do servidor',
+            details: error.message 
+        });
     }
 }

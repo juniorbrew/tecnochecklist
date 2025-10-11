@@ -16,39 +16,44 @@ export default async function handler(req, res) {
     }
 
     try {
-        console.log('Método:', req.method);
-        console.log('Body:', req.body);
+        console.log('[saveData] Método:', req.method);
+        console.log('[saveData] Body:', req.body);
         
         // Verificar se é método POST
         if (req.method !== 'POST') {
+            console.error('[saveData] Método incorreto:', req.method);
             return res.status(405).json({ error: 'Método não permitido. Use POST.' });
         }
 
         const { tabela, dados } = req.body;
         
-        console.log('Tabela:', tabela);
-        console.log('Dados:', dados);
+        console.log('[saveData] Tabela:', tabela);
+        console.log('[saveData] Dados:', JSON.stringify(dados));
         
         if (!tabela || !dados) {
+            console.error('[saveData] Parâmetros faltando:', { tabela: !!tabela, dados: !!dados });
             return res.status(400).json({ error: 'Parâmetros tabela e dados são obrigatórios' });
         }
 
         // Salvar no Supabase
-        console.log('Tentando salvar na tabela:', tabela);
-        console.log('Dados a serem salvos:', dados);
+        console.log('[saveData] Tentando salvar na tabela:', tabela);
         
         const { data: resultado, error } = await supabase
             .from(tabela)
             .insert([dados])
             .select();
             
-        console.log('Resultado Supabase:', { data: resultado, error });
+        console.log('[saveData] Resultado Supabase:', { success: !!resultado, error: error?.message });
 
         if (error) {
-            console.error('Erro Supabase:', error);
-            return res.status(500).json({ error: 'Erro ao salvar dados no banco' });
+            console.error('[saveData] Erro Supabase detalhado:', JSON.stringify(error));
+            return res.status(500).json({ 
+                error: 'Erro ao salvar dados no banco',
+                details: error.message 
+            });
         }
 
+        console.log('[saveData] Sucesso! Dados salvos:', resultado[0]?.id);
         return res.status(200).json({ 
             success: true, 
             message: 'Dados salvos com sucesso',
@@ -56,7 +61,10 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('Erro:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor' });
+        console.error('[saveData] Erro exceção:', error.message, error.stack);
+        return res.status(500).json({ 
+            error: 'Erro interno do servidor',
+            details: error.message 
+        });
     }
 }
