@@ -1,38 +1,40 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://wznupigcxxecuahihqow.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6bnVwaWdjeHhlY3VhaGlocW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3OTc3NjYsImV4cCI6MjA3NTM3Mzc2Nn0.fIFs3GOIvMBVn2wyYmXuEoh5lXoRkn2vFkzmLfNYy44';
+const supabaseUrl = 'https://ftptqjolbzpdqoxydgkj.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0cHRxam9sYnpwZHFveHlkZ2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjA1NDAsImV4cCI6MjA3NTUzNjU0MH0.dDiK4JqFbhTTXGvAYjfvvXXVepLMgujpYXQyUhOf4s4';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-exports.handler = async (event, context) => {
+export default async function handler(req, res) {
     // Configurar CORS
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
-    };
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 
-    // Responder a requisições OPTIONS (CORS preflight)
-    if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers,
-            body: ''
-        };
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
     }
 
     try {
-        const data = JSON.parse(event.body);
-        const { tabela, id, dados } = data;
+        console.log('[updateData] Método:', req.method);
+        console.log('[updateData] Body:', req.body);
+        
+        // Verificar se é método PUT
+        if (req.method !== 'PUT') {
+            console.error('[updateData] Método incorreto:', req.method);
+            return res.status(405).json({ error: 'Método não permitido. Use PUT.' });
+        }
+
+        const { tabela, id, dados } = req.body;
+        
+        console.log('[updateData] Tabela:', tabela, 'ID:', id);
         
         if (!tabela || !id || !dados) {
-            return {
-                statusCode: 400,
-                headers,
-                body: JSON.stringify({ error: 'Parâmetros tabela, id e dados são obrigatórios' })
-            };
+            console.error('[updateData] Parâmetros faltando:', { tabela: !!tabela, id: !!id, dados: !!dados });
+            return res.status(400).json({ error: 'Parâmetros tabela, id e dados são obrigatórios' });
         }
+
+        console.log('[updateData] Tentando atualizar na tabela:', tabela);
 
         // Atualizar no Supabase
         const { data: resultado, error } = await supabase
@@ -42,30 +44,25 @@ exports.handler = async (event, context) => {
             .select();
 
         if (error) {
-            console.error('Erro Supabase:', error);
-            return {
-                statusCode: 500,
-                headers,
-                body: JSON.stringify({ error: 'Erro ao atualizar dados no banco' })
-            };
+            console.error('[updateData] Erro Supabase:', JSON.stringify(error));
+            return res.status(500).json({ 
+                error: 'Erro ao atualizar dados no banco',
+                details: error.message 
+            });
         }
 
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({ 
-                success: true, 
-                message: 'Dados atualizados com sucesso',
-                data: resultado[0]
-            })
-        };
+        console.log('[updateData] Sucesso! Dados atualizados:', resultado[0]?.id);
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Dados atualizados com sucesso',
+            data: resultado[0]
+        });
 
     } catch (error) {
-        console.error('Erro:', error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ error: 'Erro interno do servidor' })
-        };
+        console.error('[updateData] Erro exceção:', error.message, error.stack);
+        return res.status(500).json({ 
+            error: 'Erro interno do servidor',
+            details: error.message 
+        });
     }
-};
+}
