@@ -5151,6 +5151,9 @@
             } else if (modalTitle) {
                 modalTitle.innerHTML = '🔧 Checklist & Modo Técnico';
             }
+            
+            // IMPORTANTE: Atualizar a tabela principal para refletir o progresso
+            updateStatusInTable(tarefaId);
         }
 
         function gerarPDFSimples(tarefa) {
