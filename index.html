@@ -3980,27 +3980,16 @@
         }
 
         function renderTarefas() {
-            console.log('[renderTarefas] Iniciando renderização de', tarefas.length, 'tarefas');
-            
             const tbody = document.getElementById('tarefas-tbody');
             tbody.innerHTML = '';
             
             if (tarefas.length === 0) {
-                console.log('[renderTarefas] Nenhuma tarefa para renderizar');
                 tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem; color: var(--gray-500);">Nenhuma tarefa cadastrada</td></tr>';
                 return;
             }
             
             tarefas.forEach((tarefa, index) => {
                 try {
-                    console.log(`[renderTarefas] Renderizando tarefa ${index + 1}:`, {
-                        id: tarefa.id,
-                        titulo: tarefa.titulo,
-                        cliente: tarefa.cliente,
-                        tecnico: tarefa.tecnico,
-                        tipo: tarefa.tipo,
-                        hasChecklist: !!tarefa.checklist
-                    });
                 const row = document.createElement('tr');
                 const statusClass = `status-${tarefa.status.replace(' ', '-')}`;
                 // Verificar se checklist existe antes de acessar
@@ -4068,11 +4057,9 @@
                 `;
                 
                 tbody.appendChild(row);
-                console.log(`[renderTarefas] Tarefa ${index + 1} renderizada com sucesso`);
                 
                 } catch (error) {
-                    console.error(`[renderTarefas] Erro ao renderizar tarefa ${index + 1}:`, error);
-                    console.error('[renderTarefas] Dados da tarefa com erro:', tarefa);
+                    console.error(`❌ Erro ao renderizar tarefa ${index + 1}:`, error.message);
                     // Adicionar linha de erro na tabela
                     const errorRow = document.createElement('tr');
                     errorRow.innerHTML = `
@@ -4083,8 +4070,6 @@
                     tbody.appendChild(errorRow);
                 }
             });
-            
-            console.log('[renderTarefas] Renderização concluída');
         }
 
         function toggleChecklist(tarefaId) {
@@ -4781,6 +4766,7 @@
                 align-items: center;
                 justify-content: center;
                 padding: 10px;
+                -webkit-overflow-scrolling: touch;
             `;
             
             modal.innerHTML = `
@@ -4792,6 +4778,8 @@
                     max-height: 90vh;
                     overflow-y: auto;
                     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+                    -webkit-overflow-scrolling: touch;
+                    touch-action: pan-y;
                 ">
                     <!-- Header -->
                     <div style="
@@ -4829,6 +4817,23 @@
                         </div>
                     </div>
                     
+                    <!-- Dica de Uso -->
+                    <div style="
+                        margin: 0 20px 15px 20px;
+                        padding: 12px 16px;
+                        background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+                        border-left: 4px solid #3b82f6;
+                        border-radius: 8px;
+                        font-size: 13px;
+                        color: #1e40af;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    ">
+                        <span style="font-size: 20px;">💡</span>
+                        <span>Toque nos itens abaixo para marcar como concluído</span>
+                    </div>
+                    
                     <!-- Checklist Items -->
                     <div style="padding: 0 20px 20px 20px;">
                         ${tarefa.checklist.map((item, index) => `
@@ -4848,6 +4853,8 @@
                                     transition: all 0.3s ease;
                                     user-select: none;
                                     box-shadow: ${item.concluido ? '0 4px 12px rgba(16, 185, 129, 0.2)' : '0 2px 8px rgba(0,0,0,0.1)'};
+                                    -webkit-tap-highlight-color: rgba(16, 185, 129, 0.2);
+                                    touch-action: manipulation;
                                  ">
                                 <div id="checkbox-${tarefaId}-${index}" style="
                                     width: 32px;
@@ -4988,19 +4995,13 @@
             
             // Adicionar event listeners para os itens do checklist
             const checklistItems = modal.querySelectorAll('.checklist-item-mobile');
-            console.log('[abrirModoTecnico] Encontrados', checklistItems.length, 'itens do checklist');
             
-            checklistItems.forEach((item, index) => {
-                const tarefaId = item.getAttribute('data-tarefa-id');
-                const itemIndex = item.getAttribute('data-item-index');
-                console.log(`[abrirModoTecnico] Adicionando event listener ao item ${index}:`, { tarefaId, itemIndex });
-                
+            checklistItems.forEach((item) => {
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     const tarefaId = this.getAttribute('data-tarefa-id');
                     const itemIndex = parseInt(this.getAttribute('data-item-index'));
-                    console.log('[Event Listener] Clique detectado:', { tarefaId, itemIndex });
                     toggleChecklistItemMobile(tarefaId, itemIndex);
                 });
                 
@@ -5040,45 +5041,33 @@
                     transform: translateY(-1px);
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 }
+                .checklist-item-mobile:active {
+                    transform: scale(0.98);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }
                 .checklist-item-mobile {
                     transition: all 0.2s ease;
+                }
+                /* Melhor feedback visual para mobile */
+                @media (max-width: 768px) {
+                    .checklist-item-mobile:active {
+                        background: rgba(16, 185, 129, 0.1) !important;
+                    }
                 }
             `;
             document.head.appendChild(style);
         }
 
         function toggleChecklistItemMobile(tarefaId, itemIndex) {
-            console.log('[toggleChecklistItemMobile] Iniciando:', { tarefaId, itemIndex });
-            
             const tarefa = tarefas.find(t => t.id === tarefaId);
-            console.log('[toggleChecklistItemMobile] Tarefa encontrada:', tarefa);
             
-            if (!tarefa) {
-                console.error('[toggleChecklistItemMobile] Tarefa não encontrada!');
+            if (!tarefa || !tarefa.checklist || !tarefa.checklist[itemIndex]) {
+                console.error('❌ Erro: Tarefa ou item do checklist não encontrado');
                 return;
             }
-            
-            if (!tarefa.checklist || !tarefa.checklist[itemIndex]) {
-                console.error('[toggleChecklistItemMobile] Checklist ou item não existe:', {
-                    hasChecklist: !!tarefa.checklist,
-                    checklistLength: tarefa.checklist?.length,
-                    itemIndex,
-                    itemExists: !!tarefa.checklist?.[itemIndex]
-                });
-                return;
-            }
-            
-            console.log('[toggleChecklistItemMobile] Estado atual:', {
-                item: tarefa.checklist[itemIndex],
-                concluido: tarefa.checklist[itemIndex].concluido
-            });
             
             // Toggle do item
             tarefa.checklist[itemIndex].concluido = !tarefa.checklist[itemIndex].concluido;
-            
-            console.log('[toggleChecklistItemMobile] Estado após toggle:', {
-                concluido: tarefa.checklist[itemIndex].concluido
-            });
             
             // Calcular progresso
             const concluidos = tarefa.checklist.filter(item => item.concluido).length;
@@ -5118,6 +5107,24 @@
                 tarefa.status = 'pendente';
             }
             
+            // Feedback háptico para mobile
+            if ('vibrate' in navigator) {
+                navigator.vibrate(10); // Vibração curta de 10ms
+            }
+            
+            // Indicador visual de salvamento
+            const progressText = document.getElementById('progress-text');
+            if (progressText) {
+                const originalText = progressText.textContent;
+                progressText.textContent = '💾 Salvando...';
+                progressText.style.color = '#f59e0b';
+                
+                setTimeout(() => {
+                    progressText.textContent = originalText;
+                    progressText.style.color = '';
+                }, 1000);
+            }
+            
             // Salvar dados
             saveData();
             updateStats();
@@ -5127,17 +5134,7 @@
             const checkbox = document.getElementById(`checkbox-${tarefaId}-${itemIndex}`);
             const text = document.getElementById(`text-${tarefaId}-${itemIndex}`);
             
-            console.log('[toggleChecklistItemMobile] Elementos encontrados:', {
-                itemElement: !!itemElement,
-                checkbox: !!checkbox,
-                text: !!text,
-                itemId: `checklist-item-${tarefaId}-${itemIndex}`,
-                checkboxId: `checkbox-${tarefaId}-${itemIndex}`,
-                textId: `text-${tarefaId}-${itemIndex}`
-            });
-            
             if (itemElement && checkbox && text) {
-                console.log('[toggleChecklistItemMobile] Atualizando visual do item');
                 const isCompleted = tarefa.checklist[itemIndex].concluido;
                 
                 // Animação simples
@@ -5147,7 +5144,6 @@
                 }, 100);
                 
                 if (isCompleted) {
-                    console.log('[toggleChecklistItemMobile] Marcando item como concluído');
                     // Item concluído
                     itemElement.style.background = '#f0fdf4';
                     itemElement.style.borderColor = '#10b981';
@@ -5164,7 +5160,6 @@
                     
                     itemElement.classList.add('completed');
                 } else {
-                    console.log('[toggleChecklistItemMobile] Desmarcando item');
                     // Item desmarcado
                     itemElement.style.background = '#ffffff';
                     itemElement.style.borderColor = '#e5e7eb';
@@ -5181,19 +5176,20 @@
                     
                     itemElement.classList.remove('completed');
                 }
-            } else {
-                console.error('[toggleChecklistItemMobile] Elementos não encontrados! Tentando recarregar modal...');
-                // Se os elementos não foram encontrados, pode ser que o modal foi recriado
-                // Tentar recarregar o modal
-                setTimeout(() => {
-                    abrirModoTecnico(tarefaId);
-                }, 100);
             }
             
             // Atualizar título da tarefa
             const modalTitle = document.querySelector('.modal h2');
             if (modalTitle && percentual === 100) {
                 modalTitle.innerHTML = '🔧 Checklist & Modo Técnico - ✅ Concluído';
+                
+                // Animação de confete ao completar 100%
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([50, 30, 50]); // Padrão de vibração celebratória
+                }
+                
+                // Mostrar notificação de conclusão
+                showNotification('🎉 Parabéns! Tarefa 100% concluída!', 'success');
             } else if (modalTitle && percentual > 0) {
                 modalTitle.innerHTML = '🔧 Checklist & Modo Técnico - ⚡ Em Andamento';
             } else if (modalTitle) {
@@ -6154,8 +6150,6 @@
 
         async function loadData() {
             try {
-                console.log('[loadData] Iniciando carregamento...');
-                
                 // Carregar dados do Supabase via funções serverless
                 const [clientesData, tecnicosData, tiposData, tarefasData] = await Promise.all([
                     fetch('/api/getData?tabela=clientes').then(r => r.json()),
@@ -6164,36 +6158,19 @@
                     fetch('/api/getData?tabela=tarefas').then(r => r.json())
                 ]);
 
-                console.log('[loadData] Dados recebidos:', {
-                    clientes: clientesData?.length,
-                    tecnicos: tecnicosData?.length,
-                    tipos: tiposData?.length,
-                    tarefas: tarefasData?.length
-                });
-
                 clientes = clientesData || [];
                 tecnicos = tecnicosData || [];
                 tipos = tiposData || [];
                 tarefas = tarefasData || [];
 
-                console.log('[loadData] Tarefas brutas do banco:', tarefas);
-
                 // Processar tarefas: adicionar nomes e checklist para exibição
-                tarefas = tarefas.map((tarefa, index) => {
-                    console.log(`[loadData] Processando tarefa ${index + 1}:`, tarefa);
-                    
+                tarefas = tarefas.map((tarefa) => {
                     // Buscar objetos completos pelos IDs
                     const clienteObj = clientes.find(c => c.id === tarefa.cliente_id);
                     const tecnicoObj = tecnicos.find(t => t.id === tarefa.tecnico_id);
                     const tipoObj = tipos.find(tp => tp.id === tarefa.tipo_id);
                     
-                    console.log(`[loadData] Objetos encontrados:`, {
-                        cliente: clienteObj?.nome,
-                        tecnico: tecnicoObj?.nome,
-                        tipo: tipoObj?.nome
-                    });
-                    
-                    const tarefaProcessada = {
+                    return {
                         ...tarefa,
                         // Adicionar nomes para exibição (se não existirem)
                         cliente: tarefa.cliente || (clienteObj ? clienteObj.nome : 'Cliente não encontrado'),
@@ -6203,15 +6180,9 @@
                         checklist: tarefa.checklist || (tipoObj && tipoObj.checklist ? 
                             tipoObj.checklist.map(item => ({ item, concluido: false })) : [])
                     };
-                    
-                    console.log(`[loadData] Tarefa processada:`, tarefaProcessada);
-                    return tarefaProcessada;
                 });
 
-                console.log('[loadData] Tarefas processadas:', tarefas.length, tarefas);
-
                 // Atualizar interface
-                console.log('[loadData] Renderizando interface...');
                 renderClientes();
                 renderTecnicos();
                 renderTipos();
@@ -6221,8 +6192,7 @@
 
                 showNotification('✅ Dados carregados do banco de dados!', 'success');
             } catch (error) {
-                console.error('[loadData] Erro ao carregar dados do banco:', error);
-                console.error('[loadData] Stack trace:', error.stack);
+                console.error('❌ Erro ao carregar dados do banco:', error.message);
                 showNotification('⚠️ Erro ao carregar dados do banco. Usando dados locais.', 'warning');
                 
                 // Fallback para localStorage
