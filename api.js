@@ -9,20 +9,29 @@ class TecnoChecklistAPI {
 
     // Método genérico para fazer requisições às funções serverless
     async request(functionName, options = {}) {
-        const url = `${this.baseUrl}/.netlify/functions/${functionName}`;
+        // Usar /api/ para Vercel em vez de /.netlify/functions/
+        const url = `${this.baseUrl}/api/${functionName}`;
         const config = {
             headers: this.headers,
             ...options
         };
 
         try {
+            console.log('[API] Chamando:', url);
             const response = await fetch(url, config);
+            console.log('[API] Status:', response.status);
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.error('[API] Erro na resposta:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
             }
-            return await response.json();
+            
+            const data = await response.json();
+            console.log('[API] Resposta recebida:', data);
+            return data;
         } catch (error) {
-            console.error('API Error:', error);
+            console.error('[API] Erro na requisição:', error);
             throw error;
         }
     }
@@ -30,7 +39,7 @@ class TecnoChecklistAPI {
     // USUÁRIOS
     async getUsuarios() {
         const response = await this.request('getData?tabela=usuarios');
-        return response.data || [];
+        return response || [];
     }
 
     async createUsuario(usuario) {
@@ -65,14 +74,14 @@ class TecnoChecklistAPI {
 
     async loginUsuario(usuario, senha) {
         const response = await this.request(`getData?tabela=usuarios&filtros=${encodeURIComponent(JSON.stringify({usuario: usuario, senha: senha, ativo: true}))}`);
-        const usuarios = response.data || [];
+        const usuarios = response || [];
         return usuarios.length > 0 ? usuarios[0] : null;
     }
 
     // CLIENTES
     async getClientes() {
         const response = await this.request('getData?tabela=clientes&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
-        return response.data || [];
+        return response || [];
     }
 
     async createCliente(cliente) {
@@ -108,7 +117,7 @@ class TecnoChecklistAPI {
     // TÉCNICOS
     async getTecnicos() {
         const response = await this.request('getData?tabela=tecnicos&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
-        return response.data || [];
+        return response || [];
     }
 
     async createTecnico(tecnico) {
@@ -144,7 +153,7 @@ class TecnoChecklistAPI {
     // TIPOS DE TAREFA
     async getTiposTarefa() {
         const response = await this.request('getData?tabela=tipos_tarefa&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
-        return response.data || [];
+        return response || [];
     }
 
     async createTipoTarefa(tipo) {
@@ -180,7 +189,7 @@ class TecnoChecklistAPI {
     // TAREFAS
     async getTarefas() {
         const response = await this.request('getData?tabela=tarefas&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
-        return response.data || [];
+        return response || [];
     }
 
     async createTarefa(tarefa) {
@@ -220,7 +229,7 @@ class TecnoChecklistAPI {
     // PRODUTOS
     async getProdutos() {
         const response = await this.request('getData?tabela=produtos&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
-        return response.data || [];
+        return response || [];
     }
 
     async createProduto(produto) {
@@ -256,7 +265,7 @@ class TecnoChecklistAPI {
     // OPORTUNIDADES
     async getOportunidades() {
         const response = await this.request('getData?tabela=oportunidades&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'created_at', ascending: false})));
-        return response.data || [];
+        return response || [];
     }
 
     async createOportunidade(oportunidade) {
@@ -292,7 +301,7 @@ class TecnoChecklistAPI {
     // ATIVIDADES
     async getAtividades() {
         const response = await this.request('getData?tabela=atividades&ordenacao=' + encodeURIComponent(JSON.stringify({campo: 'data_agendada', ascending: true})));
-        return response.data || [];
+        return response || [];
     }
 
     async createAtividade(atividade) {
@@ -328,7 +337,7 @@ class TecnoChecklistAPI {
     // OPORTUNIDADE ITENS
     async getOportunidadeItens(oportunidadeId) {
         const response = await this.request(`getData?tabela=oportunidade_itens&filtros=${encodeURIComponent(JSON.stringify({oportunidade_id: oportunidadeId}))}`);
-        return response.data || [];
+        return response || [];
     }
 
     async createOportunidadeItem(item) {

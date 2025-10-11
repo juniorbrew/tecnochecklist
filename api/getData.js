@@ -16,11 +16,17 @@ export default async function handler(req, res) {
     }
 
     try {
+        console.log('[getData] Método:', req.method);
+        console.log('[getData] Query:', req.query);
+        
         const { tabela } = req.query;
         
         if (!tabela) {
+            console.error('[getData] Tabela não especificada');
             return res.status(400).json({ error: 'Parâmetro tabela é obrigatório' });
         }
+
+        console.log('[getData] Buscando dados da tabela:', tabela);
 
         // Buscar dados do Supabase
         const { data, error } = await supabase
@@ -28,14 +34,21 @@ export default async function handler(req, res) {
             .select('*');
 
         if (error) {
-            console.error('Erro Supabase:', error);
-            return res.status(500).json({ error: 'Erro ao buscar dados do banco' });
+            console.error('[getData] Erro Supabase:', JSON.stringify(error));
+            return res.status(500).json({ 
+                error: 'Erro ao buscar dados do banco',
+                details: error.message 
+            });
         }
 
+        console.log('[getData] Sucesso! Registros encontrados:', data?.length || 0);
         return res.status(200).json(data || []);
 
     } catch (error) {
-        console.error('Erro:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor' });
+        console.error('[getData] Erro exceção:', error.message, error.stack);
+        return res.status(500).json({ 
+            error: 'Erro interno do servidor',
+            details: error.message 
+        });
     }
 }

@@ -3934,20 +3934,41 @@
             e.preventDefault();
             
             const titulo = document.getElementById('tarefa-titulo').value;
-            const cliente = document.getElementById('tarefa-cliente').value;
-            const tecnico = document.getElementById('tarefa-tecnico').value;
-            const tipo = document.getElementById('tarefa-tipo').value;
+            const cliente_id = document.getElementById('tarefa-cliente').value; // Agora é UUID
+            const tecnico_id = document.getElementById('tarefa-tecnico').value; // Agora é UUID
+            const tipo_id = document.getElementById('tarefa-tipo').value; // Agora é UUID
             const data = document.getElementById('tarefa-data').value;
             const prioridade = document.getElementById('tarefa-prioridade').value;
             const observacoes = document.getElementById('tarefa-observacoes').value;
             
-            const tipoObj = tipos.find(t => t.nome === tipo);
+            // Validar se cliente, técnico e tipo foram selecionados
+            if (!cliente_id || !tecnico_id || !tipo_id) {
+                showNotification('⚠️ Por favor, selecione cliente, técnico e tipo de serviço!', 'warning');
+                return;
+            }
+            
+            // Buscar objetos completos para uso local
+            const clienteObj = clientes.find(c => c.id === cliente_id);
+            const tecnicoObj = tecnicos.find(t => t.id === tecnico_id);
+            const tipoObj = tipos.find(t => t.id === tipo_id);
+            
+            // Criar tarefa no formato local (com nomes para exibição)
             const novaTarefa = {
                 id: crypto.randomUUID(),
-                titulo, cliente, tecnico, tipo, data, prioridade, observacoes,
+                titulo,
+                cliente: clienteObj ? clienteObj.nome : '', // Nome para exibição local
+                tecnico: tecnicoObj ? tecnicoObj.nome : '', // Nome para exibição local
+                tipo: tipoObj ? tipoObj.nome : '', // Nome para exibição local
+                cliente_id, // ID para salvar no banco
+                tecnico_id, // ID para salvar no banco
+                tipo_id, // ID para salvar no banco
+                data,
+                prioridade,
+                observacoes,
                 status: 'pendente',
+                progresso: 0,
                 checklist: tipoObj && tipoObj.checklist ? tipoObj.checklist.map(item => ({ item, concluido: false })) : [],
-                created_at: new Date().toISOString()
+                _isNew: true  // Marca para indicar que é uma nova tarefa
             };
             
             tarefas.push(novaTarefa);
@@ -3962,11 +3983,19 @@
             const tbody = document.getElementById('tarefas-tbody');
             tbody.innerHTML = '';
             
-            tarefas.forEach(tarefa => {
+            if (tarefas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem; color: var(--gray-500);">Nenhuma tarefa cadastrada</td></tr>';
+                return;
+            }
+            
+            tarefas.forEach((tarefa, index) => {
+                try {
                 const row = document.createElement('tr');
                 const statusClass = `status-${tarefa.status.replace(' ', '-')}`;
-                const progresso = tarefa.checklist.length > 0 ? 
-                    Math.round((tarefa.checklist.filter(item => item.concluido).length / tarefa.checklist.length) * 100) : 0;
+                // Verificar se checklist existe antes de acessar
+                const checklist = tarefa.checklist || [];
+                const progresso = checklist.length > 0 ? 
+                    Math.round((checklist.filter(item => item.concluido).length / checklist.length) * 100) : 0;
                 
                 const prioridadeClass = `prioridade-${tarefa.prioridade}`;
                 const prioridadeIcon = {
@@ -4028,6 +4057,18 @@
                 `;
                 
                 tbody.appendChild(row);
+                
+                } catch (error) {
+                    console.error(`❌ Erro ao renderizar tarefa ${index + 1}:`, error.message);
+                    // Adicionar linha de erro na tabela
+                    const errorRow = document.createElement('tr');
+                    errorRow.innerHTML = `
+                        <td colspan="9" style="background: #fee; color: #c00; padding: 1rem; text-align: center;">
+                            ⚠️ Erro ao renderizar tarefa: ${tarefa.titulo || 'Sem título'} - ${error.message}
+                        </td>
+                    `;
+                    tbody.appendChild(errorRow);
+                }
             });
         }
 
@@ -4082,26 +4123,9 @@
         }
 
         function updateStatusInTable(tarefaId) {
-            // Encontrar a linha da tarefa na tabela principal
-            const table = document.getElementById('tarefas-tbody');
-            const rows = table.querySelectorAll('tr');
-            
-            rows.forEach(row => {
-                // Verificar se esta linha contém botões para a tarefa específica
-                const buttons = row.querySelectorAll(`button[onclick*="${tarefaId}"]`);
-                if (buttons.length > 0) {
-                    // Atualizar status da tarefa na tabela (6ª coluna - índice 5)
-                    const cells = row.querySelectorAll('td');
-                    if (cells.length > 5) {
-                        const statusCell = cells[5];
-                        const tarefa = tarefas.find(t => t.id === tarefaId);
-                        if (tarefa) {
-                            const statusClass = `status-${tarefa.status.replace(' ', '-')}`;
-                            statusCell.innerHTML = `<span class="task-status ${statusClass}">${tarefa.status}</span>`;
-                        }
-                    }
-                }
-            });
+            // Simplesmente re-renderizar a tabela inteira para garantir sincronização
+            renderTarefas();
+            updateStats();
         }
 
         function updateTarefaStatus(tarefaId, novoStatus) {
@@ -4241,24 +4265,29 @@
             clienteSelect.innerHTML = '<option value="">Selecione o cliente</option>';
             filtroClienteSelect.innerHTML = '<option value="">Todos os clientes</option>';
             clientes.forEach(cliente => {
-                const option = `<option value="${cliente.nome}">${cliente.nome}</option>`;
+                // Usar ID como value para salvar no banco, nome como texto de exibição
+                const option = `<option value="${cliente.id}">${cliente.nome}</option>`;
                 clienteSelect.innerHTML += option;
-                filtroClienteSelect.innerHTML += option;
+                // Filtro usa nome para compatibilidade com sistema de busca
+                filtroClienteSelect.innerHTML += `<option value="${cliente.nome}">${cliente.nome}</option>`;
             });
             
             // Técnicos
             tecnicoSelect.innerHTML = '<option value="">Selecione o técnico</option>';
             filtroTecnicoSelect.innerHTML = '<option value="">Todos os técnicos</option>';
             tecnicos.forEach(tecnico => {
-                const option = `<option value="${tecnico.nome}">${tecnico.nome}</option>`;
+                // Usar ID como value para salvar no banco, nome como texto de exibição
+                const option = `<option value="${tecnico.id}">${tecnico.nome}</option>`;
                 tecnicoSelect.innerHTML += option;
-                filtroTecnicoSelect.innerHTML += option;
+                // Filtro usa nome para compatibilidade com sistema de busca
+                filtroTecnicoSelect.innerHTML += `<option value="${tecnico.nome}">${tecnico.nome}</option>`;
             });
             
             // Tipos
             tipoSelect.innerHTML = '<option value="">Selecione o tipo</option>';
             tipos.forEach(tipo => {
-                tipoSelect.innerHTML += `<option value="${tipo.nome}">${tipo.nome}</option>`;
+                // Usar ID como value para salvar no banco, nome como texto de exibição
+                tipoSelect.innerHTML += `<option value="${tipo.id}">${tipo.nome}</option>`;
             });
         }
 
@@ -4720,6 +4749,7 @@
                 align-items: center;
                 justify-content: center;
                 padding: 10px;
+                -webkit-overflow-scrolling: touch;
             `;
             
             modal.innerHTML = `
@@ -4731,6 +4761,8 @@
                     max-height: 90vh;
                     overflow-y: auto;
                     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+                    -webkit-overflow-scrolling: touch;
+                    touch-action: pan-y;
                 ">
                     <!-- Header -->
                     <div style="
@@ -4768,12 +4800,30 @@
                         </div>
                     </div>
                     
+                    <!-- Dica de Uso -->
+                    <div style="
+                        margin: 0 20px 15px 20px;
+                        padding: 12px 16px;
+                        background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+                        border-left: 4px solid #3b82f6;
+                        border-radius: 8px;
+                        font-size: 13px;
+                        color: #1e40af;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    ">
+                        <span style="font-size: 20px;">💡</span>
+                        <span>Toque nos itens abaixo para marcar como concluído</span>
+                    </div>
+                    
                     <!-- Checklist Items -->
                     <div style="padding: 0 20px 20px 20px;">
                         ${tarefa.checklist.map((item, index) => `
                             <div id="checklist-item-${tarefaId}-${index}" 
                                  class="checklist-item-mobile ${item.concluido ? 'completed' : ''}" 
-                                 onclick="toggleChecklistItemMobile(${tarefaId}, ${index})"
+                                 data-tarefa-id="${tarefaId}"
+                                 data-item-index="${index}"
                                  style="
                                     display: flex;
                                     align-items: center;
@@ -4786,6 +4836,8 @@
                                     transition: all 0.3s ease;
                                     user-select: none;
                                     box-shadow: ${item.concluido ? '0 4px 12px rgba(16, 185, 129, 0.2)' : '0 2px 8px rgba(0,0,0,0.1)'};
+                                    -webkit-tap-highlight-color: rgba(16, 185, 129, 0.2);
+                                    touch-action: manipulation;
                                  ">
                                 <div id="checkbox-${tarefaId}-${index}" style="
                                     width: 32px;
@@ -4871,58 +4923,47 @@
                         display: flex;
                         gap: 10px;
                     ">
-                        <button onclick="enviarChecklistWhatsApp(${tarefaId})" 
-                                style="
-                                    flex: 1;
-                                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                                    color: white;
-                                    border: none;
-                                    padding: 15px;
-                                    border-radius: 10px;
-                                    font-size: 16px;
-                                    font-weight: 600;
-                                    cursor: pointer;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    gap: 8px;
-                                ">
-                            📱 Enviar PDF + WhatsApp
-                        </button>
-                        <button onclick="imprimirTarefa(${tarefaId})" 
-                                style="
-                                    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-                                    color: white;
-                                    border: none;
-                                    padding: 15px;
-                                    border-radius: 10px;
-                                    font-size: 16px;
-                                    font-weight: 600;
-                                    cursor: pointer;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    gap: 8px;
-                                ">
-                            🖨️ Imprimir
-                        </button>
                         <button onclick="this.closest('.modal').remove()" 
                                 style="
-                                    background: #6b7280;
+                                    flex: 1;
+                                    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
                                     color: white;
                                     border: none;
-                                    padding: 15px 20px;
-                                    border-radius: 10px;
+                                    padding: 16px 20px;
+                                    border-radius: 12px;
                                     font-size: 16px;
+                                    font-weight: 600;
                                     cursor: pointer;
+                                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                                    transition: all 0.3s ease;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    gap: 8px;
                                 ">
-                            ✕ Fechar
+                            ✅ Salvar e Fechar
                         </button>
                     </div>
                 </div>
             `;
             
             document.body.appendChild(modal);
+            
+            // Adicionar event listeners para os itens do checklist
+            const checklistItems = modal.querySelectorAll('.checklist-item-mobile');
+            
+            checklistItems.forEach((item) => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const tarefaId = this.getAttribute('data-tarefa-id');
+                    const itemIndex = parseInt(this.getAttribute('data-item-index'));
+                    toggleChecklistItemMobile(tarefaId, itemIndex);
+                });
+                
+                // Adicionar cursor pointer para indicar que é clicável
+                item.style.cursor = 'pointer';
+            });
             
             // Inicializar sistema de comentários
             initCommentsSystem(tarefaId);
@@ -4956,8 +4997,18 @@
                     transform: translateY(-1px);
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 }
+                .checklist-item-mobile:active {
+                    transform: scale(0.98);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }
                 .checklist-item-mobile {
                     transition: all 0.2s ease;
+                }
+                /* Melhor feedback visual para mobile */
+                @media (max-width: 768px) {
+                    .checklist-item-mobile:active {
+                        background: rgba(16, 185, 129, 0.1) !important;
+                    }
                 }
             `;
             document.head.appendChild(style);
@@ -4965,7 +5016,11 @@
 
         function toggleChecklistItemMobile(tarefaId, itemIndex) {
             const tarefa = tarefas.find(t => t.id === tarefaId);
-            if (!tarefa) return;
+            
+            if (!tarefa || !tarefa.checklist || !tarefa.checklist[itemIndex]) {
+                console.error('❌ Erro: Tarefa ou item do checklist não encontrado');
+                return;
+            }
             
             // Toggle do item
             tarefa.checklist[itemIndex].concluido = !tarefa.checklist[itemIndex].concluido;
@@ -4995,8 +5050,10 @@
                 }
             }
             
+            // Atualizar texto de progresso
+            const progressoTexto = `${concluidos} de ${total} concluídos (${percentual}%)`;
             if (progressText) {
-                progressText.textContent = `${concluidos} de ${total} concluídos (${percentual}%)`;
+                progressText.textContent = progressoTexto;
             }
             
             // Atualizar status da tarefa
@@ -5006,6 +5063,22 @@
                 tarefa.status = 'em-andamento';
             } else {
                 tarefa.status = 'pendente';
+            }
+            
+            // Feedback háptico para mobile
+            if ('vibrate' in navigator) {
+                navigator.vibrate(10); // Vibração curta de 10ms
+            }
+            
+            // Indicador visual de salvamento (breve)
+            if (progressText) {
+                progressText.textContent = '💾 ' + progressoTexto;
+                progressText.style.color = '#f59e0b';
+                
+                setTimeout(() => {
+                    progressText.textContent = progressoTexto;
+                    progressText.style.color = '#6b7280';
+                }, 800);
             }
             
             // Salvar dados
@@ -5065,6 +5138,14 @@
             const modalTitle = document.querySelector('.modal h2');
             if (modalTitle && percentual === 100) {
                 modalTitle.innerHTML = '🔧 Checklist & Modo Técnico - ✅ Concluído';
+                
+                // Animação de confete ao completar 100%
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([50, 30, 50]); // Padrão de vibração celebratória
+                }
+                
+                // Mostrar notificação de conclusão
+                showNotification('🎉 Parabéns! Tarefa 100% concluída!', 'success');
             } else if (modalTitle && percentual > 0) {
                 modalTitle.innerHTML = '🔧 Checklist & Modo Técnico - ⚡ Em Andamento';
             } else if (modalTitle) {
@@ -6038,16 +6119,36 @@
                 tipos = tiposData || [];
                 tarefas = tarefasData || [];
 
+                // Processar tarefas: adicionar nomes e checklist para exibição
+                tarefas = tarefas.map((tarefa) => {
+                    // Buscar objetos completos pelos IDs
+                    const clienteObj = clientes.find(c => c.id === tarefa.cliente_id);
+                    const tecnicoObj = tecnicos.find(t => t.id === tarefa.tecnico_id);
+                    const tipoObj = tipos.find(tp => tp.id === tarefa.tipo_id);
+                    
+                    return {
+                        ...tarefa,
+                        // Adicionar nomes para exibição (se não existirem)
+                        cliente: tarefa.cliente || (clienteObj ? clienteObj.nome : 'Cliente não encontrado'),
+                        tecnico: tarefa.tecnico || (tecnicoObj ? tecnicoObj.nome : 'Técnico não encontrado'),
+                        tipo: tarefa.tipo || (tipoObj ? tipoObj.nome : 'Tipo não encontrado'),
+                        // Inicializar checklist se não existir
+                        checklist: tarefa.checklist || (tipoObj && tipoObj.checklist ? 
+                            tipoObj.checklist.map(item => ({ item, concluido: false })) : [])
+                    };
+                });
+
                 // Atualizar interface
                 renderClientes();
                 renderTecnicos();
                 renderTipos();
                 renderTarefas();
                 updateStats();
+                updateSelects(); // Atualizar selects com os dados carregados
 
                 showNotification('✅ Dados carregados do banco de dados!', 'success');
             } catch (error) {
-                console.error('Erro ao carregar dados do banco:', error);
+                console.error('❌ Erro ao carregar dados do banco:', error.message);
                 showNotification('⚠️ Erro ao carregar dados do banco. Usando dados locais.', 'warning');
                 
                 // Fallback para localStorage
@@ -6170,9 +6271,61 @@
 
                 // Salvar tarefas
                 for (const tarefa of tarefas) {
-                    // Verificar se é uma tarefa nova (sem created_at) ou existente
-                    if (tarefa.created_at) {
+                    // Verificar se é uma tarefa nova (_isNew) ou existente
+                    if (tarefa._isNew) {
+                        // Criar nova tarefa - enviar apenas campos que existem na tabela do Supabase
+                        const tarefaData = {
+                            id: tarefa.id,
+                            titulo: tarefa.titulo,
+                            cliente_id: tarefa.cliente_id,
+                            tecnico_id: tarefa.tecnico_id,
+                            tipo_id: tarefa.tipo_id,
+                            data: tarefa.data,
+                            prioridade: tarefa.prioridade,
+                            status: tarefa.status,
+                            checklist: tarefa.checklist || null,
+                            progresso: tarefa.progresso || 0,
+                            observacoes: tarefa.observacoes || null
+                        };
+                        
+                        console.log('[Salvando tarefa]', tarefaData);
+                        
+                        promises.push(
+                            fetch('/api/saveData', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tabela: 'tarefas',
+                                    dados: tarefaData
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                console.log('[saveData] Tarefa salva:', result);
+                                // Marcar tarefa como salva removendo _isNew e adicionando created_at
+                                const tarefaIndex = tarefas.findIndex(t => t.id === tarefa.id);
+                                if (tarefaIndex !== -1) {
+                                    delete tarefas[tarefaIndex]._isNew;
+                                    tarefas[tarefaIndex].created_at = result.data?.created_at || new Date().toISOString();
+                                }
+                                return result;
+                            })
+                        );
+                    } else if (tarefa.created_at) {
                         // Atualizar tarefa existente
+                        const tarefaData = {
+                            titulo: tarefa.titulo,
+                            cliente_id: tarefa.cliente_id,
+                            tecnico_id: tarefa.tecnico_id,
+                            tipo_id: tarefa.tipo_id,
+                            data: tarefa.data,
+                            prioridade: tarefa.prioridade,
+                            status: tarefa.status,
+                            checklist: tarefa.checklist || null,
+                            progresso: tarefa.progresso || 0,
+                            observacoes: tarefa.observacoes || null
+                        };
+                        
                         promises.push(
                             fetch('/api/updateData', {
                                 method: 'PUT',
@@ -6180,19 +6333,7 @@
                                 body: JSON.stringify({
                                     tabela: 'tarefas',
                                     id: tarefa.id,
-                                    dados: tarefa
-                                })
-                            })
-                        );
-                    } else {
-                        // Criar nova tarefa
-                        promises.push(
-                            fetch('/api/saveData', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    tabela: 'tarefas',
-                                    dados: tarefa
+                                    dados: tarefaData
                                 })
                             })
                         );
